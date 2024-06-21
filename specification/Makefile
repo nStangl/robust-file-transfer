@@ -1,4 +1,4 @@
-all: draft-rft.txt
+all: rft.txt
 
 %.txt: %.xml
 	xml2rfc $<
