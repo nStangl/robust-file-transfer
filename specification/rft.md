@@ -142,3 +142,50 @@ StructName1 (Length) {
 }
 ~~~~
 {: title='Message format notation' }
+
+The only scalar types are integer denoted with "U" for unsigned and "I" for
+signed integers. Strings are a composite type consisting of the size as "U16"
+followed by ASCII-characters. Padding is made explicit via the field name
+"Padding" and constant values are assigned with a "=".
+
+To visualize protocol runs we use the following sequence diagram notation:
+
+~~~~ LANGUAGE-REPLACE/DELETE
+Client                                                       Server
+   |                                                           |
+   |------[CID:1337][ACK, SID:1, FID:3][FLOW, SIZE:1000]------>|
+   |                                                           |
+   v                                                           v
+~~~~
+{: title='Sequence diagram notation' }
+
+The individual parts of the packets are enclosed by brackets and only the
+relevant values are shown. First we always have the RFT packet header,
+followed by zero or multiple frames. See below for more details on the
+packet structure.
+
+We use the following abbreviations mostly in diagrams:
+
+| Abbreviation | Meaning                 |
+| ------------ | ----------------------- |
+| VERS         | Version                 |
+| CRC          | Packet checksum         |
+| CID          | Connection ID           |
+| SID          | Stream ID               |
+| FID          | Frame ID                |
+| CMD          | Command frame           |
+| DATA         | Data frame              |
+| ERR          | Error frame             |
+| RESP         | Response frame          |
+| ACK          | Acknowledgement frame   |
+| EXIT         | Exit frame              |
+| READ         | Read command            |
+| WRITE        | Write command           |
+| CHK          | Checksum command        |
+| LIST         | List command            |
+| STAT         | Stat command            |
+| WIN          | Flow control frame      |
+| LEN          | Length                  |
+| OFF          | Offset                  |
+| SIZE         | Flow window size        |
+{: title="Common abbreviations."}
