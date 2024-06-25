@@ -60,7 +60,7 @@ RFT provides point-to-point operation between a client and a server, enabling IP
 
 --- middle
 
-# Introduction
+# Introduction {#introduction}
 
 The Protocol Design WG is tasked with standardizing an Application Protocol for a robust file transfer protocol, RFT.
 This protocol is intended to provide point-to-point operation between a client and a server built upon UDP {{RFC0768}}.
@@ -78,11 +78,11 @@ padding. Frames are either *data frames*, *error frames* or various types of
 control frames used for the connection initialization and negotiation, flow
 control, congestion control, acknowledgement or handling of commands.
 
-## Keywords
+## Keywords {#keywords}
 
 {::boilerplate bcp14-tagged}
 
-## Terms
+## Terms {#terms}
 
 The following terms are used throughout this document:
 
@@ -123,7 +123,7 @@ Sender:
 Receiver:
 : The endpoint receiving a packet or frame.
 
-## Notation
+## Notation {#notation}
 
 This document defines `U4`, `U8`, `U16`, `U32`, `U64` as unsigned 4-, 8-, 16-, 32-, or 64-bit integers.
 A `string` is a UTF-8 {{RFC3629}} encoded zero-terminated string.
