@@ -193,3 +193,49 @@ We use the following abbreviations mostly in diagrams:
 | NEW          | New connection ID          |
 | MSG          | Message                    |
 {: title="Common abbreviations."}
+
+# Overview {#overview}
+
+This section gives a rough overview over the protocol and provides basic
+information necessary to follow the detailed description in the following
+sections.
+
+The RFT protocol is a simple layer 7 protocol for Robust File Transfer.
+It sits on-top of layer 4 with a single RFT packet send as a UDP SDU.
+The packet structure is shown in the following figure:
+
+~~~~ LANGUAGE-REPLACE/DELETE
+                   +-----------+--------------------------------+
+                   | ACK Frame |       Data Frame       |  ...  |
++------------------+-----------+--------------------------------+
+| VERS | CID | CRC |                                            |
++------------------+      Payload (zero or multiple frames)     |
+|       Header     |                                            |
++------------------+--------------------------------------------+
+|                           RFT Packet                          |
++---------------------------------------------------------------+
+|                            UDP SDU                            |
++---------------------------------------------------------------+
+~~~~
+{: title='General packet structure' }
+
+The header contains a version field (VER) for evolvability, as connection
+ID (CID) uniquely identifying the connection on both ends, and a
+cyclic-redundancy-check (CRC) checksum to validate the packet integrity.
+
+After the header follows the payload which holds one or more RFT frames
+inspired by {{RFC9000}}. These serve both for data transfer as well as any
+additional logic besides version matching, connection identification, and
+packet integrity validation. The most important types are AckFrames for
+acknowledging frames based on their frame ID (FID), CommandFrames to issue
+commands on the server, and DataFrames to transport data for the commands to
+read or write a file. File data in the ReadCommand and WriteCommand as well
+as in DataFrames is indexed by byte offset and length making both transfer
+recovery and parallel transfers even of different parts of the same file
+possible. Each transfer is encapsulated in a stream identified by a stream
+ID (SID) allowing for multiplexing multiple transfers over a single connection.
+
+The next sections provides detailed information about connection-related
+topics, e.g. establishment, streams, reliability, congestion control and more.
+The sections after that explain the message format and framing in more detail,
+and lists all the different frame and command types.
