@@ -178,13 +178,13 @@ We use the following abbreviations mostly in diagrams:
 | ERR          | Error frame             |
 | RESP         | Response frame          |
 | ACK          | Acknowledgement frame   |
+| WIN          | Flow control frame      |
 | EXIT         | Exit frame              |
 | READ         | Read command            |
 | WRITE        | Write command           |
 | CHK          | Checksum command        |
 | LIST         | List command            |
 | STAT         | Stat command            |
-| WIN          | Flow control frame      |
 | LEN          | Length                  |
 | OFF          | Offset                  |
 | SIZE         | Flow window size        |
