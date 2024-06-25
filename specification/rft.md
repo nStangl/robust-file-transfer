@@ -55,7 +55,7 @@ normative:
 --- abstract
 
 Robust File Transfer (RFT) is a file-transfer protocol on top of UDP.
-It is connection-oriented and stateful, supporting connection migration based on connection IDs similar to QUIC.
+It is connection-oriented, stream-parallel and stateful, supporting connection migration based on connection IDs similar to QUIC.
 RFT provides point-to-point operation between a client and a server, enabling IP address migration, flow control, congestion control, and partial or resumed file transfers using offsets and lengths.
 
 --- middle
@@ -66,7 +66,8 @@ The Protocol Design WG is tasked with standardizing an Application Protocol for 
 This protocol is intended to provide point-to-point operation between a client and a server built upon UDP {{RFC0768}}.
 It supports connection migration based on connection IDs, in spirit similar to QUIC {{RFC9000}}, although a bit easier.
 
-RFT is based on UDP, connection-oriented and stateful.
+RFT is based on UDP, connection-oriented, stateful and uses streams for each file transfer
+allowing for parallelization.
 A point-to-point connection supports IP address migration, flow control, congestion control and allows to transfers of a specific length and offset, which can be useful to resume interrupted transfers or partial transfers.
 The protocol guarantees in-order delivery for all packets belonging to a stream.
 There is no such guarantee for messages belonging to different streams.
