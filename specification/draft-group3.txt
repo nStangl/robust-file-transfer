@@ -1,0 +1,840 @@
+
+
+
+
+Protocol Design Task Force Group 3                    I. Gustafsson, Ed.
+Internet-Draft                                          Y. E. Nacar, Ed.
+Intended status: Informational                             D. Rentz, Ed.
+Expires: 5 December 2024                  Technical University of Munich
+                                                             3 June 2024
+
+
+                          Robust File Transfer
+                              draft-rft-00
+
+Abstract
+
+   This document introduces a UDP-based protocol, Robust File Transfer
+   (RFT).  RFT is a connection-oriented, reliable, and stream-based
+   protocol that allows concurrent transmission of multiple files.
+
+Status of This Memo
+
+   This Internet-Draft is submitted in full conformance with the
+   provisions of BCP 78 and BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF).  Note that other groups may also distribute
+   working documents as Internet-Drafts.  The list of current Internet-
+   Drafts is at https://datatracker.ietf.org/drafts/current/.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   This Internet-Draft will expire on 5 December 2024.
+
+Copyright Notice
+
+   Copyright (c) 2024 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents (https://trustee.ietf.org/
+   license-info) in effect on the date of publication of this document.
+   Please review these documents carefully, as they describe your rights
+   and restrictions with respect to this document.  Code Components
+   extracted from this document must include Revised BSD License text as
+   described in Section 4.e of the Trust Legal Provisions and are
+   provided without warranty as described in the Revised BSD License.
+
+
+
+
+
+Gustafsson, et al.       Expires 5 December 2024                [Page 1]
+
+Internet-Draft                     RFT                         June 2024
+
+
+Table of Contents
+
+   1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   3
+     1.1.  Terminology . . . . . . . . . . . . . . . . . . . . . . .   3
+     1.2.  Overview  . . . . . . . . . . . . . . . . . . . . . . . .   3
+     1.3.  Requirements Language . . . . . . . . . . . . . . . . . .   4
+   2.  Connections . . . . . . . . . . . . . . . . . . . . . . . . .   4
+     2.1.  Connection initiation . . . . . . . . . . . . . . . . . .   4
+     2.2.  Connection migration  . . . . . . . . . . . . . . . . . .   5
+     2.3.  Connection termination  . . . . . . . . . . . . . . . . .   5
+     2.4.  Connection resumption . . . . . . . . . . . . . . . . . .   5
+   3.  Streams . . . . . . . . . . . . . . . . . . . . . . . . . . .   5
+     3.1.  Stream initiation . . . . . . . . . . . . . . . . . . . .   6
+     3.2.  Stream termination  . . . . . . . . . . . . . . . . . . .   6
+   4.  File Changes  . . . . . . . . . . . . . . . . . . . . . . . .   6
+   5.  Packets . . . . . . . . . . . . . . . . . . . . . . . . . . .   6
+     5.1.  Packet packaging  . . . . . . . . . . . . . . . . . . . .   6
+     5.2.  Packet format . . . . . . . . . . . . . . . . . . . . . .   6
+       5.2.1.  Type  . . . . . . . . . . . . . . . . . . . . . . . .   7
+       5.2.2.  Flags . . . . . . . . . . . . . . . . . . . . . . . .   7
+       5.2.3.  Stream ID . . . . . . . . . . . . . . . . . . . . . .   8
+       5.2.4.  Offset  . . . . . . . . . . . . . . . . . . . . . . .   8
+       5.2.5.  Length  . . . . . . . . . . . . . . . . . . . . . . .   9
+       5.2.6.  File Checksum . . . . . . . . . . . . . . . . . . . .   9
+       5.2.7.  Payload . . . . . . . . . . . . . . . . . . . . . . .   9
+   6.  Errors  . . . . . . . . . . . . . . . . . . . . . . . . . . .   9
+     6.1.  Error Codes . . . . . . . . . . . . . . . . . . . . . . .  10
+   7.  Acknowledgment  . . . . . . . . . . . . . . . . . . . . . . .  10
+     7.1.  ACK Packet Generation . . . . . . . . . . . . . . . . . .  10
+     7.2.  ACK Packet Structure  . . . . . . . . . . . . . . . . . .  11
+   8.  Retransmission  . . . . . . . . . . . . . . . . . . . . . . .  12
+   9.  Flow Control and Congestion Control . . . . . . . . . . . . .  12
+     9.1.  Definitions . . . . . . . . . . . . . . . . . . . . . . .  12
+     9.2.  Flow Control  . . . . . . . . . . . . . . . . . . . . . .  13
+     9.3.  Congestion Control  . . . . . . . . . . . . . . . . . . .  13
+     9.4.  Send Window . . . . . . . . . . . . . . . . . . . . . . .  13
+   10. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  14
+   11. Security Considerations . . . . . . . . . . . . . . . . . . .  14
+   12. References  . . . . . . . . . . . . . . . . . . . . . . . . .  14
+     12.1.  Normative References . . . . . . . . . . . . . . . . . .  14
+     12.2.  Informative References . . . . . . . . . . . . . . . . .  15
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  15
+
+
+
+
+
+
+
+
+
+Gustafsson, et al.       Expires 5 December 2024                [Page 2]
+
+Internet-Draft                     RFT                         June 2024
+
+
+1.  Introduction
+
+   This document introduces a UDP-based protocol, Robust File Transfer
+   (RFT).  The protocol described in this document is designed to
+   implement the transfer of files from a sender to a receiver.  The
+   transmission is reliable, i.e., the protocol ensures that the files
+   are transmitted completely and correctly.  Furthermore, the protocol
+   includes mechanisms for migrating to a changed IP address and
+   resumption of failed transmissions, allowing recovery from changing
+   connectivity as commonly observed in mobile scenarios.  The
+   communication is built on UDP, allowing simple integration at
+   middleboxes and distribution to end devices.
+
+   Additionally, the protocol includes mechanisms for flow control and
+   congestion control to ensure that neither the network nor the
+   receiver's buffer is overloaded.  The protocol is designed to be
+   simple and lightweight, and the design choices are made such that the
+   implementation is straightforward and efficient.
+
+1.1.  Terminology
+
+   RFT: Robust File Transfer
+
+   PDU: Protocol DATA Unit
+
+   UDP: User Datagram Protocol
+
+   byte: 8-bits
+
+   RFT Packet: A packet sent by the RFT protocol.  A single UDP datagram
+   may contain multiple RFT packets.
+
+   Connection Initiation Port: The port used by the sender to establish
+   new connections.
+
+   Connection Port: The port used by the sender to communicate with the
+   receiver after the connection has been established.
+
+   Stream: Encapsulation of the transmission of a single file.
+
+1.2.  Overview
+
+   The intended purpose of the RFT protocol is for a receiver to request
+   one or more files from a sender.
+
+   The receiver establishes a connection with the sender.  The receiver
+   sends one or more requests for files, which are identified by their
+   full path.  When the receiver has finished the transmission of a full
+
+
+
+Gustafsson, et al.       Expires 5 December 2024                [Page 3]
+
+Internet-Draft                     RFT                         June 2024
+
+
+   file path, the sender starts transmitting the file data.  Multiple
+   files can be requested and transmitted concurrently to eliminate
+   head-of-line blocking caused by a single file.  The transmission of
+   each file is encapsulated as a stream.  Once the receiver has
+   received all requested data, the connection is closed.
+
+1.3.  Requirements Language
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
+   "OPTIONAL" in this document are to be interpreted as described in
+   BCP 14 [RFC2119] [RFC8174] when, and only when, they appear in all
+   capitals, as shown here.
+
+2.  Connections
+
+   Each receiver has exactly one connection to the sender at a time.  If
+   the connection is terminated before the transmission is complete
+   (e.g. because of a temporary loss of connectivity), the receiver
+   session can open a new connection to continue the transmission.
+
+   The sender can serve multiple receivers concurrently.  Therefore it
+   needs to differentiate between multiple connections.  The sender
+   identifies a connection by the used UDP port.  Each connection to the
+   sender uses a different UDP port.  The used UDP port is determined
+   during the connection initiation by the sender.
+
+2.1.  Connection initiation
+
+   The sender is open to establishing new connections at a well-known
+   port called the Connection Initiation Port.  The sender MAY choose to
+   use a port of their liking for the purpose of establishing new
+   connections.  The connection initiation procedure is as follows:
+
+   1.  The receiver MUST send a single first packet to the Connection
+       Initiation Port of the sender and wait for a response.
+
+   2.  Upon receiving a packet at its Connection Initiation Port, the
+       sender considers this a new connection.  The sender sends its
+       response from a new unused local port called the Connection Port,
+       which it will continue to use throughout the remainder of the
+       connection.
+
+   3.  The receiver receives a response from the Connection Port.  The
+       receiver continues to use this port throughout the remainder of
+       the connection.
+
+
+
+
+
+Gustafsson, et al.       Expires 5 December 2024                [Page 4]
+
+Internet-Draft                     RFT                         June 2024
+
+
+2.2.  Connection migration
+
+   For each connection, the sender MUST store the IP address of the
+   receiver.  Any outgoing packets are sent to this IP address.
+
+   Upon reception of a packet, the sender MUST confirm that it was sent
+   from this IP address.  If the packet was sent from a different IP
+   address, the sender MUST assume that the IP address of the receiver
+   has changed and update the stored IP address for this connection with
+   the new IP.
+
+2.3.  Connection termination
+
+   A connection MUST be terminated in one of the following ways:
+
+   1.  Termination of the last open stream in the connection
+
+       *  By means of the mechanisms specified in (Section 3.2).
+
+   2.  Connection timeout
+
+       *  If no packets are transmitted through any of the streams for
+          10 minutes, the connection SHOULD be terminated.
+
+       *  The sender or the receiver MAY use a different timeout value.
+
+2.4.  Connection resumption
+
+   Transmissions can be resumed if a connection is terminated before the
+   transmission is completed.  This is done by the receiver by
+   specifying an initial offset value for the file to be transmitted and
+   setting the O flag in the GET packet.  The sender MUST start
+   transmitting the file data at the specified offset value.
+
+3.  Streams
+
+   A stream encapsulates the transmission of exactly one file.  Multiple
+   streams can exist in a connection simultaneously.  A stream is
+   identified by its stream id.  A stream consists of two phases:
+
+   1.  The receiver transmits the full path of the file to the sender.
+
+   2.  The sender transmits the file data to the receiver.
+
+   The stream ID is only unique within a connection.  The same stream ID
+   can be used for multiple connections.  Once a transmission is
+   completed, the stream ID can be reused for a new transmission.
+
+
+
+
+Gustafsson, et al.       Expires 5 December 2024                [Page 5]
+
+Internet-Draft                     RFT                         June 2024
+
+
+3.1.  Stream initiation
+
+   The receiver initiates the creation of a new stream.  The receiver
+   selects a stream ID that is currently not in use in this connection.
+   The receiver immediately starts transmitting the full file path to
+   the sender.
+
+   Upon reception of an unknown stream ID, the sender considers this a
+   new stream.  Once the filename is fully transmitted, the sender
+   immediately starts transmitting the file data to the receiver.
+
+3.2.  Stream termination
+
+   A stream MUST be terminated in one of the following ways:
+
+   1.  The file data transmission phase is completed successfully,
+       signaled by the sender by sending the last packet with the F flag
+       set and the receiver acknowledging the last packet with the F
+       flag set.
+
+   2.  An error message was sent from the receiver or from the sender.
+
+   3.  The connection is terminated by connection timeout.
+
+4.  File Changes
+
+   The RFT protocol implements a file verification system using CRC16
+   codes to identify files with identical names.  A sender MUST set the
+   C flag of the first DATA packet and include the file's CRC16 code in
+   the header.  A receiver MAY start a GET request with an included
+   checksum.  In this case, the sender SHALL only start sending DATA
+   packets if the received CRC16 code matches the stored file's CRC16
+   code.  If the codes are mismatched, the sender MUST reply with an
+   ERROR packet with the error code 0x02 (File Changed).
+
+5.  Packets
+
+5.1.  Packet packaging
+
+   A single UDP datagram MAY contain multiple RFT packets.  These RFT
+   packets are placed sequentially inside of the UDP datagram with the
+   RFT packet headers delimiting where the next packet is located.
+
+5.2.  Packet format
+
+
+
+
+
+
+
+Gustafsson, et al.       Expires 5 December 2024                [Page 6]
+
+Internet-Draft                     RFT                         June 2024
+
+
+   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |     type      |C|F|L|O| flags |           stream id           |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                            offset                             |
+   |                                                               |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |             length            |         file_checksum         |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                                                               |
+   :                            payload                            :
+   |                                                               |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+                   Figure 1: The format of an RFT packet
+
+   Every RFT packet begins with a variable length header between 4 and
+   16 bytes.  The rest of the RFT packet is the payload.
+
+5.2.1.  Type
+
+   The 8-bit type field describes the purpose of the packet.  Any RFT
+   packet header MUST contain a type field.  The following types are
+   defined:
+
+   0x00: GET  Used by the receiver to request a file from the sender.
+      Contains a part of or the full path of the requested file.
+
+   0x01: DATA  File transfer packet.  Contains a part of or a full file.
+
+   0x02: ACK  Acknowledges the RFT packet with the exact matching stream
+      ID (and offset if the file is fragmented).
+
+   0x03: ERROR  Informs of an error having occurred on the specified
+      stream ID.  The payload contains the 8-bit error code followed by
+      a UTF-8 encoded error message.
+
+5.2.2.  Flags
+
+   The 8-bit flags field consists of 4 flags (C, F, L, O) and 4 reserved
+   bits.  Any RFT packet header MUST contain a flags field.  The
+   following flags are defined:
+
+   C: Checksum Present  Set if the checksum field is present in the
+
+
+
+
+
+
+
+Gustafsson, et al.       Expires 5 December 2024                [Page 7]
+
+Internet-Draft                     RFT                         June 2024
+
+
+      header. - GET packets MAY include a checksum to verify if the file
+      has changed since the last transmission. - GET packets MUST
+      include a checksum if the connection is resumed. - The first DATA
+      packet in a stream MUST include a checksum. - ACK packets MUST NOT
+      include a checksum.
+
+   F: Final  Set if the packet is the last packet of a data transmission
+      or a request or acknowledges the last packet of a data
+      transmission or a request. - If set in a GET packet, the sent full
+      path is complete and the sender SHOULD start sending the file
+      data. - If set in a DATA packet, the file data is complete. - If
+      set in an ACK packet sent by the receiver, the receiver has
+      received the last packet of the stream, and the stream is
+      terminated, meaning the stream ID can be reused. - If set in an
+      ACK packet sent by the sender, the sender has received the last
+      ACK packet of the GET request and the receiver SHOULD expect
+      either an ERROR packet or a DATA packet.
+
+   L: Length Present  Set if the length field is present in the header.
+      - If set, indicate that there is at least one more RFT packet in
+      the UDP datagram. - The last RFT packet in a UDP datagram MUST NOT
+      set this flag.
+
+   O: Offset Present  The header contains an offset. - If set in a GET
+      packet, the receiver requests the file starting from the specified
+      offset. - If set in a DATA packet, the packet contains a part of
+      the file starting from the specified offset. - If set in an ACK
+      packet, the packet acknowledges the packet with the specified
+      offset.
+
+5.2.3.  Stream ID
+
+   The 16-bit stream ID separates different requests for different files
+   made by the same receiver.  This connects GET and DATA packets
+   together into one dialogue.  The usage of this field is specified in
+   (Section 3).  Any RFT packet header MUST contain a stream ID field.
+
+5.2.4.  Offset
+
+   The 64-bit offset identifies where a payload is to be placed when
+   interpreting multiple fragments as one complete payload.  An RFT
+   packet header MAY NOT contain an offset field.  If the O flag is set,
+   the offset field is present in the header.  This value is also used
+   to identify separate RFT packets for the purpose of acknowledgment.
+
+   The offset specifies the position in the file where the payload is to
+   be placed by bytes.  This puts the upper limit on the size of the
+   file that can be transmitted over a single stream to 2^64 bytes.
+
+
+
+Gustafsson, et al.       Expires 5 December 2024                [Page 8]
+
+Internet-Draft                     RFT                         June 2024
+
+
+5.2.5.  Length
+
+   The 16-bit length field contains a number that specifies the length
+   of the payload.  An RFT packet header MAY NOT contain a length field.
+   If the L flag is set, the length field is present in the header.  The
+   length field is used to determine where the next RFT packet starts in
+   the UDP datagram.
+
+5.2.6.  File Checksum
+
+   The 16-bit field contains a CRC16 code of the related file.  An RFT
+   packet header MAY NOT contain a checksum field.  If the C flag is
+   set, the checksum field is present in the header.  The checksum is
+   used to verify if the file has changed since the last transmission or
+   before the resumption of a dropped connection.
+
+5.2.7.  Payload
+
+   The payload is of variable size.  The length is either specified in
+   the length field or inferred from the remaining length of the
+   enclosing UDP datagram, as specified by (Section 5.2.5).
+
+   The payload is encoded as follows:
+
+   0x00 GET  UTF-8 encoded string containing a part of or the full path
+      of the requested file.
+
+   0x01 DATA  Binary data of the requested file.
+
+   0x02 ACK  32-bit unsigned integer: remaining receive buffer size in
+      bytes.
+
+   0x03 ERROR  8-bit error code followed by a UTF-8 encoded error
+      message.
+
+6.  Errors
+
+   The RFT protocol uses error messages to inform the receiver of any
+   issues that may have occurred during the transmission.  The error
+   message is sent in an ERROR packet.  The error message consists of an
+   8-bit error code followed by a UTF-8 encoded error message.
+
+   The error messages are left to the application layer to set and
+   interpret.
+
+
+
+
+
+
+
+Gustafsson, et al.       Expires 5 December 2024                [Page 9]
+
+Internet-Draft                     RFT                         June 2024
+
+
+6.1.  Error Codes
+
+   The following error codes are defined:
+
+   0x00: Unknown Error - Resulting from an uncategorized error.  The
+   payload contains a UTF-8 encoded error message possibly containing
+   more information about the error.
+
+   0x01: File Not Found - The requested file at the specified path was
+   not found on the sender.
+
+   0x02: File Changed - The file has changed since the last
+   transmission.  - The sender MUST terminate a stream with this error
+   code if the file has changed during the transmission.  - The sender
+   MUST respond with this error code if the receiver tries to resume a
+   transmission but the file has changed since the termination of the
+   previous transmission.
+
+   0x03: File Too Large - The requested file at the specified path is
+   too large to be transmitted.  - The sender MUST respond with this
+   error code if the requested file size is larger than 2^64 bytes which
+   is the maximum file size that can be transmitted over a single
+   stream, specified in (Section 5.2.4).
+
+   0x04: Read error - The requested file at the specified path could not
+   be read by the sender.
+
+   0x05: Write error - The requested file at the specified path could
+   not be written by the receiver.  - The sender SHOULD terminate the
+   stream if this error code is received from the receiver.
+
+7.  Acknowledgment
+
+   The acknowledgment generation scheme is per packet-based.  The
+   acknowledgments carry the remaining receive buffer size (in bytes) of
+   the receiver to allow flow control.
+
+7.1.  ACK Packet Generation
+
+   The RFT protocol ensures in-order delivery by acknowledging packets
+   belonging to the same stream ID in order, meaning the receiver MUST
+   generate an ACK packet for each packet received in order.  Since the
+   sizes of individual packets are not fixed, the following algorithm is
+   used to generate an ACK packet:
+
+   *  The receiver keeps the offset (field value) n and length (field
+      value) l of the last packet acknowledged in memory.
+
+
+
+
+Gustafsson, et al.       Expires 5 December 2024               [Page 10]
+
+Internet-Draft                     RFT                         June 2024
+
+
+   *  The receiver receives a packet with offset m and length k.
+
+      -  If m = n + l, the receiver updates n to m and l to k and
+         generates an ACK packet.
+
+      -  If m != n + l, the receiver discards the packet and does not
+         generate an ACK packet.
+
+         o  This will result in the timeout for the next packet sent
+            after the last acknowledged packet, which will be
+            retransmitted.
+
+7.2.  ACK Packet Structure
+
+   When a packet is received, the receiver MUST send an ACK packet with
+   the following values in the header:
+
+   *  Type: 0x02 (ACK)
+
+   *  Flags:
+
+      -  C: 0, (cheksum not present)
+
+      -  F: Same as the packet being acknowledged
+
+         o  0 if the packet being acknowledged is not the last packet in
+            the stream
+
+         o  1 if the packet being acknowledged is the last packet in the
+            stream
+
+      -  L: 0 if the generated ACK is the last packet being put into a
+         UDP datagram, 1 if there are more following packets in the UDP
+         datagram.
+
+      -  O: Same as the packet being acknowledged
+
+         o  0 if the offset is not present, as in, the whole file is
+            sent in one go and the acknowledgment generated is for the
+            whole file as well
+
+         o  1 if the offset is present, as in, the file is sent in
+            multiple fragments and the acknowledgment generated is for a
+            specific fragment.
+
+   *  Stream ID: The stream ID of the packet being acknowledged
+
+
+
+
+
+Gustafsson, et al.       Expires 5 December 2024               [Page 11]
+
+Internet-Draft                     RFT                         June 2024
+
+
+   *  Offset: The offset of the packet being acknowledged, if the O flag
+      is set.
+
+   *  Length: Length of the payload of the acknowledgment packet, if the
+      L flag is set.
+
+   and the following value in the payload:
+
+   *  4 bytes unsigned integer: remaining receive buffer size in bytes.
+
+8.  Retransmission
+
+   The retransmission scheme is based on a simple timeout per packet
+   mechanism.  If a packet is not acknowledged within a certain time
+   frame, the packet is retransmitted.  The default timeout value is set
+   to 10 second.
+
+   The sender MAY choose to dynamically adjust based on the round trip
+   time (RTT) of the connection with the following exponential weighted
+   moving average (EWMA) algorithm:
+
+   RTT_{new} = (1-a) * RTT_{old} + a * RTT_{sample} Timeout_{new} = b *
+   RTT_{new}
+
+   where a is a constant value between 0 and 1, set to 0.125 by default,
+   and b is a constant value with a default value of 10.
+
+   The update interval for the timeout value is left to the
+   implementation if the sender chooses to use the EWMA algorithm.
+
+9.  Flow Control and Congestion Control
+
+9.1.  Definitions
+
+   *  RFT packet size (rps): The size of an RFT packet in bytes,
+      including the header and payload.
+
+   *  Congestion window (cwnd): The maximum number of bytes the sender
+      can send before receiving an ACK packet to avoid congestion in the
+      network.
+
+   *  Receive window (rwnd): The maximum number of bytes the sender can
+      send before receiving an ACK packet to avoid overflowing the
+      receiver's buffer.
+
+   *  Send window (swnd): The maximum number of bytes the sender can
+      send without waiting for an ACK packet.
+
+
+
+
+Gustafsson, et al.       Expires 5 December 2024               [Page 12]
+
+Internet-Draft                     RFT                         June 2024
+
+
+   *  Send window base (swnd_base): The offset value that defines the
+      start of the send window.
+
+9.2.  Flow Control
+
+   The sender maintains a receive window (rwnd) that keeps track of the
+   remaining buffer size of the receiver, which represents the maximum
+   amount of data the sender can send without waiting for an
+   acknowledgment purely from the receiver buffer size perspective.  The
+   value of rwnd is updated to the advertised remaining receive buffer
+   size on every ACK packet received by the sender.
+
+9.3.  Congestion Control
+
+   The RFT protocol uses the timeout mechanism to detect packet loss and
+   assumes that packet loss is due to network congestion.  The sender
+   employs a simple additive increase/multiplicative decrease (AIMD)
+   congestion control mechanism to adjust the cwnd value based on
+   whether a packet is acknowledged or not.
+
+   The sender maintains a congestion window (cwnd) variable that
+   represents the maximum number of bytes the sender can send without
+   waiting for an acknowledgment without causing congestion in the
+   network and causing packet drops.  The sender updates the cwnd value
+   based on the following rules:
+
+   *  The initial value of cwnd is set to 1 * rps.
+
+   *  If a packet is acknowledged, the sender increases the cwnd value
+      by rps.
+
+   *  If a packet is not acknowledged within the timeout period, the
+      sender decreases the cwnd value by half.
+
+9.4.  Send Window
+
+   Overall, the RFT protocol uses a sliding window mechanism to regulate
+   how much data should be transmitted by a sender.  The sender
+   maintains a send window (swnd) that represents the offset values that
+   can be used without waiting for an ACK packet.  The sender updates
+   the swnd value based on both the rwnd value received in the ACK
+   packets and the cwnd value.
+
+   The value of swnd is the minimum of the rwnd value and the cwnd value
+   at all times:
+
+   swnd = min(rwnd, cwnd)
+
+
+
+
+Gustafsson, et al.       Expires 5 December 2024               [Page 13]
+
+Internet-Draft                     RFT                         June 2024
+
+
+   The minimum function used in the calculation of swnd ensures that the
+   sender cannot have more data in flight than the remaining buffer size
+   of the receiver.
+
+   The sender also maintains a send window base (swnd_base) that keeps
+   track of the start value of the send window.  Therefore, the sender
+   can send packets with an offset value between swnd_base and
+   (swnd_base + swnd) without waiting for an ACK packet.
+
+   The value of swnd_base is updated based (to slide the window) on the
+   ACK packet received.  The sender updates swnd_base to the sum of the
+   offset value of the last ACK packet received and the rps value of the
+   last acknowledged packet:
+
+   swnd_base = offset of last ACK packet (also the offset of the last
+   acknowledged packet) + rps of last acknowledged packet.
+
+   This is also the same operation with just increasing swnd_base by rps
+   of the last acknowledged packet.
+
+   swnd_base += rps of last acknowledged packet
+
+10.  IANA Considerations
+
+   This memo includes no request to IANA.
+
+11.  Security Considerations
+
+   The protocol is NOT secure and easily hijacked.  It should NOT be
+   used to transfer private data.  The files may also be maliciously
+   altered between transmissions as the version control relies on the
+   non-cryptographic CRC16.
+
+12.  References
+
+12.1.  Normative References
+
+   [RFC768]   Postel, J., "User Datagram Protocol", STD 6, RFC 768,
+              DOI 10.17487/RFC0768, August 1980,
+              <https://www.rfc-editor.org/rfc/rfc768>.
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119,
+              DOI 10.17487/RFC2119, March 1997,
+              <https://www.rfc-editor.org/rfc/rfc2119>.
+
+
+
+
+
+
+Gustafsson, et al.       Expires 5 December 2024               [Page 14]
+
+Internet-Draft                     RFT                         June 2024
+
+
+   [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
+              2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
+              May 2017, <https://www.rfc-editor.org/rfc/rfc8174>.
+
+12.2.  Informative References
+
+   [RFC9293]  Eddy, W., Ed., "Transmission Control Protocol (TCP)",
+              STD 7, RFC 9293, DOI 10.17487/RFC9293, August 2022,
+              <https://www.rfc-editor.org/rfc/rfc9293>.
+
+   [RFC2581]  Allman, M., Paxson, V., and W. Stevens, "TCP Congestion
+              Control", RFC 2581, DOI 10.17487/RFC2581, April 1999,
+              <https://www.rfc-editor.org/rfc/rfc2581>.
+
+Authors' Addresses
+
+   Isak Gustafsson (editor)
+   Technical University of Munich
+   Boltzmannstraße 3
+   85748 Garching
+   Germany
+   Email: go68wuy@mytum.de
+
+
+   Yusuf Erdem Nacar (editor)
+   Technical University of Munich
+   Boltzmannstraße 3
+   85748 Garching
+   Germany
+   Email: yusuferdem.nacar@tum.de
+
+
+   Désirée Rentz (editor)
+   Technical University of Munich
+   Boltzmannstraße 3
+   85748 Garching
+   Germany
+   Email: desiree.rentz@tum.de
+
+
+
+
+
+
+
+
+
+
+
+
+
+Gustafsson, et al.       Expires 5 December 2024               [Page 15]

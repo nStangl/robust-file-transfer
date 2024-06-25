@@ -1,0 +1,840 @@
+
+
+
+
+TUM Protocol Design                                       N. Stangl, Ed.
+Internet-Draft                                      J. Pfannschmidt, Ed.
+Intended status: Informational                           S. Gierens, Ed.
+Expires: 3 December 2024                  Technical University of Munich
+                                                             1 June 2024
+
+
+  Robust File Transfer based on Simplified QUIC for File System Access
+                               draft-rft
+
+Abstract
+
+   Robust File Transfer (RFT) is a file-transfer protocol on top of UDP.
+   RFT ist based on UDP datagram transports
+
+Status of This Memo
+
+   This Internet-Draft is submitted in full conformance with the
+   provisions of BCP 78 and BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF).  Note that other groups may also distribute
+   working documents as Internet-Drafts.  The list of current Internet-
+   Drafts is at https://datatracker.ietf.org/drafts/current/.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   This Internet-Draft will expire on 3 December 2024.
+
+Copyright Notice
+
+   Copyright (c) 2024 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents (https://trustee.ietf.org/
+   license-info) in effect on the date of publication of this document.
+   Please review these documents carefully, as they describe your rights
+   and restrictions with respect to this document.  Code Components
+   extracted from this document must include Revised BSD License text as
+   described in Section 4.e of the Trust Legal Provisions and are
+   provided without warranty as described in the Revised BSD License.
+
+
+
+
+
+
+Stangl, et al.           Expires 3 December 2024                [Page 1]
+
+Internet-Draft                     RFT                         June 2024
+
+
+Table of Contents
+
+   1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   3
+     1.1.  Keywords  . . . . . . . . . . . . . . . . . . . . . . . .   3
+     1.2.  Terms . . . . . . . . . . . . . . . . . . . . . . . . . .   3
+     1.3.  Notation  . . . . . . . . . . . . . . . . . . . . . . . .   4
+   2.  Overview  . . . . . . . . . . . . . . . . . . . . . . . . . .   5
+   3.  Connection  . . . . . . . . . . . . . . . . . . . . . . . . .   6
+     3.1.  Establishment . . . . . . . . . . . . . . . . . . . . . .   6
+       3.1.1.  Connection ID Negotiation . . . . . . . . . . . . . .   6
+       3.1.2.  Version Interoperability  . . . . . . . . . . . . . .   7
+     3.2.  Teardown  . . . . . . . . . . . . . . . . . . . . . . . .   7
+     3.3.  Reliability . . . . . . . . . . . . . . . . . . . . . . .   8
+       3.3.1.  Frame ID  . . . . . . . . . . . . . . . . . . . . . .   8
+       3.3.2.  Acknowledgement . . . . . . . . . . . . . . . . . . .   8
+       3.3.3.  Retransmission  . . . . . . . . . . . . . . . . . . .   8
+       3.3.4.  Checksumming  . . . . . . . . . . . . . . . . . . . .   8
+     3.4.  Recovery  . . . . . . . . . . . . . . . . . . . . . . . .   8
+     3.5.  Migration . . . . . . . . . . . . . . . . . . . . . . . .   8
+     3.6.  Flow Control  . . . . . . . . . . . . . . . . . . . . . .   8
+     3.7.  Congestion Control  . . . . . . . . . . . . . . . . . . .   8
+     3.8.  Multiple Transfers  . . . . . . . . . . . . . . . . . . .   9
+     3.9.  Timeout . . . . . . . . . . . . . . . . . . . . . . . . .   9
+   4.  File Transfer . . . . . . . . . . . . . . . . . . . . . . . .   9
+   5.  Body [REPLACE]  . . . . . . . . . . . . . . . . . . . . . . .   9
+   6.  Message Formats . . . . . . . . . . . . . . . . . . . . . . .  10
+     6.1.  Packet Header . . . . . . . . . . . . . . . . . . . . . .  10
+     6.2.  Message Frames  . . . . . . . . . . . . . . . . . . . . .  10
+       6.2.1.  Data Frame  . . . . . . . . . . . . . . . . . . . . .  11
+       6.2.2.  Acknowledgment Frame  . . . . . . . . . . . . . . . .  11
+       6.2.3.  Flow Frame  . . . . . . . . . . . . . . . . . . . . .  12
+       6.2.4.  Error Frame . . . . . . . . . . . . . . . . . . . . .  12
+       6.2.5.  Connection ID Change Frame  . . . . . . . . . . . . .  12
+       6.2.6.  Command Frames  . . . . . . . . . . . . . . . . . . .  13
+   7.  Security Considerations . . . . . . . . . . . . . . . . . . .  14
+   8.  References  . . . . . . . . . . . . . . . . . . . . . . . . .  14
+     8.1.  Normative References  . . . . . . . . . . . . . . . . . .  14
+     8.2.  Informative References  . . . . . . . . . . . . . . . . .  14
+   Appendix A.  Appendix 1 [REPLACE/DELETE]  . . . . . . . . . . . .  15
+   Acknowledgements  . . . . . . . . . . . . . . . . . . . . . . . .  15
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  15
+
+
+
+
+
+
+
+
+
+
+Stangl, et al.           Expires 3 December 2024                [Page 2]
+
+Internet-Draft                     RFT                         June 2024
+
+
+1.  Introduction
+
+   The Protocol Design WG is tasked with standardizing an Application
+   Protocol for a robust file transfer protocol, RFT.  This protocol is
+   intended to provide point-to-point operation between a client and a
+   server built upon UDP [RFC0768].  It supports connection migration
+   based on connection IDs, in spirit similar to QUIC [RFC9000],
+   although a bit easier.
+
+   RFT is based on UDP, connection-oriented and stateful.  A point-to-
+   point connection supports IP address migration, flow control,
+   congestion control and allows to transfers of a specific length and
+   offset, which can be useful to resume interrupted transfers or
+   partial transfers.  The protocol guarantees in-order delivery for all
+   packets belonging to a stream.  There is no such guarantee for
+   messages belonging to different streams.
+
+   RFT _messages_ always consist of a single _Packet Header_ and zero or
+   multiple _Frames_ appended continously on the wire after the packet
+   header without padding.  Frames are either _data frames_, _error
+   frames_ or various types of control frames used for the connection
+   initialization and negotiation, flow control, congestion control,
+   acknowledgement or handling of commands.
+
+1.1.  Keywords
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
+   "OPTIONAL" in this document are to be interpreted as described in
+   BCP 14 [RFC2119] [RFC8174] when, and only when, they appear in all
+   capitals, as shown here.
+
+1.2.  Terms
+
+   The following terms are used throughout this document:
+
+   Client:
+      The endpoint of a connection that initiated it and issues commands
+      over it.
+
+   Server:
+      The endpoint of a connection that listens for and accepts
+      connections from clients and answers their commands.
+
+   Connection:
+      A communication channel between a client and server identified by
+      a single connection ID unique on both ends.
+
+
+
+
+Stangl, et al.           Expires 3 December 2024                [Page 3]
+
+Internet-Draft                     RFT                         June 2024
+
+
+   Packet:
+      An RFT datagram send as UDP SDU over a connection containing zero
+      or multiple frames.
+
+   Frame:
+      A typed and sized information unit making up (possible with
+      others) the payload of an RFT packet.
+
+   Command:
+      A typed request initiated by the client to the server, e.g. to
+      initiate a file transfer.
+
+   Sender:
+      The endpoint sending a packet or frame.
+
+   Receiver:
+      The endpoint receiving a packet or frame.
+
+1.3.  Notation
+
+   This document defines U4, U8, U16, U32, U64 as unsigned 4-, 8-, 16-,
+   32-, or 64-bit integers.  A string is a UTF-8 [RFC3629] encoded zero-
+   terminated string.
+
+   Messages are represented in a C struct-like notation.  They may be
+   annotated by C-style comments.  All members are laid out continuously
+   on wire, any padding will be made explicit.  Constant values are
+   assigned with a "=".
+
+   StructName1 (Length) {
+       TypeName1     FieldName1,
+       TypeName2     FieldName2,
+       TypeName3[4]  FieldName3,
+       String        FieldName4,
+       StructName2   FieldName5,
+   }
+
+                     Figure 1: Message format notation
+
+   The only scalar types are integer denoted with "U" for unsigned and
+   "I" for signed integers.  Strings are a composite type consisting of
+   the size as "U16" followed by ASCII-characters.  Padding is made
+   explicit via the field name "Padding" and constant values are
+   assigned with a "=".
+
+   To visualize protocol runs we use the following sequence diagram
+   notation:
+
+
+
+
+Stangl, et al.           Expires 3 December 2024                [Page 4]
+
+Internet-Draft                     RFT                         June 2024
+
+
+   Client                                                       Server
+      |                                                           |
+      |-------[CID:1337, FN:2][ACK, FID:3][FLOW, SIZE:1000]------>|
+      |                                                           |
+      v                                                           v
+
+                    Figure 2: Sequence diagram notation
+
+   The individual parts of the packets are enclosed by brackets and only
+   the relevant values are shown.  First we always have the RFT packet
+   header, followed by zero or multiple frames.  See below for more
+   details on the packet structure.
+
+2.  Overview
+
+   This section gives a rough overview over the protocol and provides
+   basic information necessary to follow the detailed description in the
+   following sections.
+
+   The RFT protocol is a simple layer 7 protocol for Robust File
+   Transfer.  It sits on-top of layer 4 with a single RFT packet send as
+   a UDP SDU.  The packet structure is shown in the following figure:
+
+                          +-----------+--------------------------------+
+                          | ACK Frame |       Data Frame       |  ...  |
+   +----------------------+-----------+--------------------------------+
+   | VER | CID | FN | CRC |                                            |
+   +----------------------+      Payload (zero or multiple frames)     |
+   |        Header        |                                            |
+   +----------------------+--------------------------------------------+
+   |                               RFT Packet                          |
+   +-------------------------------------------------------------------+
+   |                                UDP SDU                            |
+   +-------------------------------------------------------------------+
+
+                     Figure 3: General packet structure
+
+   The header contains a version field (VER) for evolvability, as
+   connection ID (CID) uniquely identifying the connection on both ends,
+   a frame number (FN) counting the number of frames send in the
+   payload, and a cyclic-redundancy-check (CRC) checksum to validate the
+   packet integrity.
+
+   After the header follows the payload which holds one or more RFT
+   frames inspired by [RFC9000].  These serve both for data transfer as
+   well as any additional logic besides version matching, connection
+   identification, and packet integrity validation.  The most important
+   types are AckFrames for acknowledging frames based on their frame ID
+
+
+
+Stangl, et al.           Expires 3 December 2024                [Page 5]
+
+Internet-Draft                     RFT                         June 2024
+
+
+   (FID), CommandFrames to issue commands on the server, and DataFrames
+   to transport data for the commands to read or write a file.  File
+   data in the ReadCommand and WriteCommand as well as in DataFrames is
+   indexed by byte offset and length making both transfer recovery and
+   parallel transfers even of different parts of the same file possible.
+
+   The next section provides detailed information about connection-
+   related topics, e.g. establishment, reliability, congestion control
+   and more.  The section after that explains the message format and
+   framing in more detail, and lists all the different frame and command
+   types.
+
+3.  Connection
+
+   The protocol is connection-based.  Connections are identified a
+   singular connection ID (CID) unique on both sides.
+
+3.1.  Establishment
+
+   The connection establishment is and via a two-way handshake and is
+   initiated by the client by sending a packet with connection ID 0.
+   The server responds with the UDP packet having reversed IP addresses
+   and ports, containing an RFT packet with the connection ID chosen by
+   the server.  The server knows all IDs of established connections and
+   must make the new one is unique.
+
+   Client                                                       Server
+      |                                                           |
+      |----------------------[CID:0, FN:0]----------------------->|
+      |                                                           |
+      |<---------------------[CID:1, FN:0]------------------------|
+      |                                                           |
+      v                                                           v
+
+       Figure 4: Sequence diagram of simple connection establishment
+
+3.1.1.  Connection ID Negotiation
+
+   This simple connection establishment is limited to a single handshake
+   at a time per UDP source port.  If the client wishes to establish
+   multiple over a single port it can attach a ConnectionIdChangeFrame
+   with a proposed connection ID for the new one (NEW) and 0 for the old
+   one (OLD).  The server acknowledges this and sends back the handshake
+   response to that connection ID:
+
+
+
+
+
+
+
+Stangl, et al.           Expires 3 December 2024                [Page 6]
+
+Internet-Draft                     RFT                         June 2024
+
+
+   Client                                                       Server
+      |                                                           |
+      |--------[CID:0, FN:2][CHCID, FID:1, OLD:0, NEW:3]--------->|
+      |                                                           |
+      |<----------------[CID:3, FN:0][ACK, FID:1]-----------------|
+      |                                                           |
+      v                                                           v
+
+      Figure 5: Sequence diagram of successful connection ID proposal
+
+   In case the proposal is already used for another connection attaches
+   another ConnectionIdChangeFrame (CHCID) with the new unique
+   connection ID chosen by the server.
+
+   Client                                                       Server
+      |                                                           |
+      |--------[CID:0, FN:1][CHCID, FID:1, OLD:0, NEW:3]--------->|
+      |                                                           |
+      |<--[CID:3, FN:2][ACK, FID:1][CHCID, FID:1, OLD:3, NEW:9]---|
+      |                                                           |
+      |-----------------[CID:9, FN:0][ACK, FID:1]---------------->|
+      |                                                           |
+      v                                                           v
+
+     Figure 6: Sequence diagram of unsuccessful connection ID proposal
+
+3.1.2.  Version Interoperability
+
+   Before responding to a handshake response the server must validate
+   that the client protocol version is interoperable with its own.  So
+   long as RFT is still in draft phase with rapid breaking changes the
+   versions of client and server have to strictly match.
+
+3.2.  Teardown
+
+   If the client wishes to close the connection it simply sends a
+   ExitCommand.  Then the AckFrame for this command is the last one the
+   server sends for this connection.
+
+   Client                                                       Server
+      |                                                           |
+      |------------[CID:5, FN:1][CMD, FID:1234, EXIT]------------>|
+      |                                                           |
+      |<--------------[CID:5, FN:1][ACK, FID:1234]----------------|
+      |                                                           |
+      v                                                           v
+
+                     Figure 7: General packet structure
+
+
+
+Stangl, et al.           Expires 3 December 2024                [Page 7]
+
+Internet-Draft                     RFT                         June 2024
+
+
+3.3.  Reliability
+
+   The protocol achieves realiability by acknowledgements and
+   checksumming.
+
+3.3.1.  Frame ID
+
+   Most frame types carry a frame ID.  This is basically the count of
+   frames the endpoint sending the frame has sent so far, so it starts
+   at 1 and is incremented by 1 for each frame sent.  A wrap around
+   occurs when the maximum value is reached.
+
+3.3.2.  Acknowledgement
+
+   Frames are cumulatively acknowledged by the receiver.  The receiver
+   sends an AckFrame with the frame ID of the last frame it received.
+   The sender then knows that all frames up to this frame ID have been
+   received.
+
+   Client                                                       Server
+      |                                                           |
+      |<-------[CID:3, FN:1][DATA, FID:13, OFF:0, LEN:1000]-------|
+      |<-----[CID:3, FN:1][DATA, FID:14, OFF:1000, LEN:1000]------|
+      |<-----[CID:3, FN:1][DATA, FID:15, OFF:2000, LEN:1000]------|
+      |                                                           |
+      |----------------[CID:3, FN:0][ACK, FID:15]---------------->|
+      |                                                           |
+      v                                                           v
+
+       Figure 8: Sequence diagram of frame cumulative acknowledgement
+
+3.3.3.  Retransmission
+
+   If the sender does not receive an AckFrame for a frame it sent within
+   a timeout 5 seconds it retransmits the frame.  If the receiver misses
+   a previous frame it sends a duplicate AckFrame for the previous frame
+   ID to signal the sender to do a fast retransmission.
+
+3.3.4.  Checksumming
+
+3.4.  Recovery
+
+3.5.  Migration
+
+3.6.  Flow Control
+
+3.7.  Congestion Control
+
+
+
+
+Stangl, et al.           Expires 3 December 2024                [Page 8]
+
+Internet-Draft                     RFT                         June 2024
+
+
+3.8.  Multiple Transfers
+
+3.9.  Timeout
+
+4.  File Transfer
+
+5.  Body [REPLACE]
+
+   Some body text [REPLACE]
+
+   This document normatively references [RFC5234] and has more
+   information in [exampleRefMin] and [exampleRefOrg].  [REPLACE]
+
+   1.  Ordered list item [REPLACE/DELETE]
+
+   2.  Ordered list item [REPLACE/DELETE]
+
+   *  Bulleted list item [REPLACE/DELETE]
+
+   *  Bulleted list item [REPLACE/DELETE]
+
+   First term:
+      Definition of the first term
+
+   Second term:
+      Definition of the second term
+
+            +========================+=======================+
+            | Table head 1 [REPLACE] | Table head2 [REPLACE] |
+            +========================+=======================+
+            | Cell 11 [REPLACE]      | Cell 12 [REPLACE]     |
+            +------------------------+-----------------------+
+            | Cell 21 [REPLACE]      | Cell 22 [REPLACE]     |
+            +------------------------+-----------------------+
+
+                     Table 1: A nice table [REPLACE]
+
+   <CODE BEGINS>
+   source code goes here [REPLACE]
+   <CODE ENDS>
+
+                         Figure 9: Source [REPLACE]
+
+
+
+
+
+
+
+
+
+Stangl, et al.           Expires 3 December 2024                [Page 9]
+
+Internet-Draft                     RFT                         June 2024
+
+
+6.  Message Formats
+
+   RFT has two types of message definitions: Packet Header and Frames.
+   Messages MUST have little-endian format.  The packet header defines
+   the top-level message, which MUST be transmitted first and defines
+   the number of frames that follow the packet header.  The zero or
+   multiple frames following the packer header MUST be appendend after
+   the packer header without padding on the wire.
+
+6.1.  Packet Header
+
+   The packet header is always the first part of a message.
+
+   *  The Version field MUST contain the version of the protocol that is
+      being used.
+
+   *  The ConnectionID MUST be set to
+
+   *  The NumberOfFrames field MUST be set to the number of frames that
+      are appended after this packet header and belong to it.
+
+   *  The Checksum field contains 20-bit of the CRC-32 hash [RFC3385] of
+      the entire message, inlcuding the packet header and all of its
+      appended frames and thei potential payload.  It MUST take the
+      first 20-bit of the 32-bit hash.
+
+   <CODE BEGINS>
+   PacketHeader {
+     U4  Version
+     U32 ConnectionID   // 0: client hello, server responds with connection id
+     U8  NumberOfFrames // zero or more frames + payload
+     U20 Checksum
+     // Zero or more appended frames
+   }
+   <CODE ENDS>
+
+              Figure 10: Mandatory fields of a Packet Header.
+
+6.2.  Message Frames
+
+   Multiple different frames exist.  All frames MUST start with a U8
+   defining the frame type.
+
+
+
+
+
+
+
+
+
+Stangl, et al.           Expires 3 December 2024               [Page 10]
+
+Internet-Draft                     RFT                         June 2024
+
+
+             +==================+============================+
+             | Frame Type Value | Frame Type                 |
+             +==================+============================+
+             | 0                | Currently reserved         |
+             +------------------+----------------------------+
+             | 1                | Data Frame                 |
+             +------------------+----------------------------+
+             | 2                | Acknowledgement Frame      |
+             +------------------+----------------------------+
+             | 3                | Flow Frame                 |
+             +------------------+----------------------------+
+             | 4                | Error Frame                |
+             +------------------+----------------------------+
+             | 5                | Connection ID Change Frame |
+             +------------------+----------------------------+
+             | 6                | Command Frame              |
+             +------------------+----------------------------+
+             | 7                | Answer Frame               |
+             +------------------+----------------------------+
+             | 8                | Read Command Payload Frame |
+             +------------------+----------------------------+
+
+                      Table 2: Frame type definitions.
+
+6.2.1.  Data Frame
+
+   The DataFrame frame contains the
+
+   <CODE BEGINS>
+   DataFrame {
+     U8  Type
+     U32 FrameID
+     U48 Offset
+     U48 Length
+   }
+   <CODE ENDS>
+
+                Figure 11: Mandatory fields of a Data Frame.
+
+6.2.2.  Acknowledgment Frame
+
+   The AckFrame contains its frame type followed by the FrameID it is
+   acknowledging.
+
+
+
+
+
+
+
+
+Stangl, et al.           Expires 3 December 2024               [Page 11]
+
+Internet-Draft                     RFT                         June 2024
+
+
+   <CODE BEGINS>
+   AckFrame {
+     U8  Type
+     U32 FrameID
+   }
+   <CODE ENDS>
+
+           Figure 12: Mandatory fields of a Acknowledgment Frame.
+
+6.2.3.  Flow Frame
+
+   <CODE BEGINS>
+   FlowFrame {
+     U8  Type
+     U16 WindowSize
+     U8  RESERVED
+   }
+   <CODE ENDS>
+
+                Figure 13: Mandatory fields of a Flow Frame.
+
+6.2.4.  Error Frame
+
+   The ErrorFrame is used to signal an error in the transfer logic of an
+   error that occured when executing a command specified by a
+   CommandFrame.  The ErrorCode defines the error code and the
+   ErrorMessage an optional error message.
+
+   <CODE BEGINS>
+   ErrorFrame {
+     U8  Type
+     U32 FrameID
+     U8  ErrorCode
+     Str ErrorMessage
+   }
+   <CODE ENDS>
+
+               Figure 14: Mandatory fields of a Error Frame.
+
+6.2.5.  Connection ID Change Frame
+
+
+
+
+
+
+
+
+
+
+
+Stangl, et al.           Expires 3 December 2024               [Page 12]
+
+Internet-Draft                     RFT                         June 2024
+
+
+   <CODE BEGINS>
+   ConnectionIDChangeFrame {
+     U8  Type
+     U32 FrameID
+     U32 OldConnectionID
+     U32 NewConnectionID
+   }
+   <CODE ENDS>
+
+        Figure 15: Mandatory fields of a Connection ID Change Frame.
+
+6.2.6.  Command Frames
+
+   <CODE BEGINS>
+   CommandFrame {
+     U8  Type
+     U32 FrameID
+     U8  CommandType
+     // ..CommandPayload
+   }
+   <CODE ENDS>
+
+              Figure 16: Mandatory fields of a Command Frame.
+
+   <CODE BEGINS>
+   AnswerFrame {
+     U8  Type
+     U32 FrameID
+     U8  CommandType
+     // ..AnswerPayload
+   }
+   <CODE ENDS>
+
+               Figure 17: Mandatory fields of a Answer Frame.
+
+   <CODE BEGINS>
+   ReadCmdPayload {
+     U48 Offset
+     U48 Length
+     U32 Checksum //changed on server?
+     Str Path
+   }
+   <CODE ENDS>
+
+        Figure 18: Mandatory fields of a Read Command Payload Frame.
+
+
+
+
+
+
+Stangl, et al.           Expires 3 December 2024               [Page 13]
+
+Internet-Draft                     RFT                         June 2024
+
+
+7.  Security Considerations
+
+   This document should not affect the security of the Internet.
+   [CHECK]
+
+8.  References
+
+8.1.  Normative References
+
+   [RFC0768]  Postel, J., "User Datagram Protocol", STD 6, RFC 768,
+              DOI 10.17487/RFC0768, August 1980,
+              <https://www.rfc-editor.org/info/rfc768>.
+
+   [RFC9000]  Iyengar, J., Ed. and M. Thomson, Ed., "QUIC: A UDP-Based
+              Multiplexed and Secure Transport", RFC 9000,
+              DOI 10.17487/RFC9000, May 2021,
+              <https://www.rfc-editor.org/info/rfc9000>.
+
+   [RFC3629]  Yergeau, F., "UTF-8, a transformation format of ISO
+              10646", STD 63, RFC 3629, DOI 10.17487/RFC3629, November
+              2003, <https://www.rfc-editor.org/info/rfc3629>.
+
+   [RFC3385]  Sheinwald, D., Satran, J., Thaler, P., and V. Cavanna,
+              "Internet Protocol Small Computer System Interface (iSCSI)
+              Cyclic Redundancy Check (CRC)/Checksum Considerations",
+              RFC 3385, DOI 10.17487/RFC3385, September 2002,
+              <https://www.rfc-editor.org/info/rfc3385>.
+
+   [RFC5234]  Crocker, D., Ed. and P. Overell, "Augmented BNF for Syntax
+              Specifications: ABNF", STD 68, RFC 5234,
+              DOI 10.17487/RFC5234, January 2008,
+              <https://www.rfc-editor.org/info/rfc5234>.
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119,
+              DOI 10.17487/RFC2119, March 1997,
+              <https://www.rfc-editor.org/info/rfc2119>.
+
+   [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
+              2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
+              May 2017, <https://www.rfc-editor.org/info/rfc8174>.
+
+8.2.  Informative References
+
+   [exampleRefMin]
+              Surname[REPLACE], G. and G. Surname1 Surname2, "Title
+              [REPLACE]", 2006.
+
+
+
+
+Stangl, et al.           Expires 3 December 2024               [Page 14]
+
+Internet-Draft                     RFT                         June 2024
+
+
+   [exampleRefOrg]
+              Organization [REPLACE], "Title [REPLACE]", April 1984,
+              <http://www.example.com/>.
+
+Appendix A.  Appendix 1 [REPLACE/DELETE]
+
+   This becomes an Appendix [REPLACE]
+
+Acknowledgements
+
+   This template uses extracts from templates written by Pekka Savola,
+   Elwyn Davies and Henrik Levkowetz.  [REPLACE]
+
+Authors' Addresses
+
+   Niklas Stangl (editor)
+   Technical University of Munich
+   Boltzmannstraße 3
+   85748 Garching
+   Germany
+   Email: niklas.stangl@tum.de
+
+
+   Johannes Pfannschmidt (editor)
+   Technical University of Munich
+   Boltzmannstraße 3
+   85748 Garching
+   Germany
+   Email: johannes.pfannschmidt@cs.tum.edu
+
+
+   Sandro-Alessio Gierens (editor)
+   Technical University of Munich
+   Boltzmannstraße 3
+   85748 Garching
+   Germany
+   Email: sandro.gierens@tum.de
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Stangl, et al.           Expires 3 December 2024               [Page 15]
