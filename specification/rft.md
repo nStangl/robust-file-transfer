@@ -98,14 +98,18 @@ frames.
 
 Frame:
 : A typed and sized information unit making up (possible with others) the
-payload of an RFT packet.
+payload of an RFT packet and usually belonging to a particular stream.
 
 Empty Packet:
 : A packet without frames.
 
 Command:
 : A typed request initiated by the client to the server, e.g. to initiate
-a file transfer.
+a file transfer, usually opening up a new stream.
+
+Stream:
+: A logical channel within a connection that carries frames belonging to a
+particular request i.e. file transfer.
 
 Sender:
 : The endpoint sending a packet or frame.
