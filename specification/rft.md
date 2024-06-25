@@ -166,26 +166,30 @@ packet structure.
 
 We use the following abbreviations mostly in diagrams:
 
-| Abbreviation | Meaning                 |
-| ------------ | ----------------------- |
-| VERS         | Version                 |
-| CRC          | Packet checksum         |
-| CID          | Connection ID           |
-| SID          | Stream ID               |
-| FID          | Frame ID                |
-| CMD          | Command frame           |
-| DATA         | Data frame              |
-| ERR          | Error frame             |
-| RESP         | Response frame          |
-| ACK          | Acknowledgement frame   |
-| WIN          | Flow control frame      |
-| EXIT         | Exit frame              |
-| READ         | Read command            |
-| WRITE        | Write command           |
-| CHK          | Checksum command        |
-| LIST         | List command            |
-| STAT         | Stat command            |
-| LEN          | Length                  |
-| OFF          | Offset                  |
-| SIZE         | Flow window size        |
+| Abbreviation | Meaning                    |
+| ------------ | -------------------------- |
+| VERS         | Version                    |
+| CRC          | Packet checksum            |
+| CID          | Connection ID              |
+| SID          | Stream ID                  |
+| FID          | Frame ID                   |
+| CMD          | Command frame              |
+| DATA         | Data frame                 |
+| ERR          | Error frame                |
+| ANSW         | Answer frame               |
+| ACK          | Acknowledgement frame      |
+| FLOW         | Flow control frame         |
+| CHCID        | Connection ID change frame |
+| EXIT         | Exit frame                 |
+| READ         | Read command               |
+| WRITE        | Write command              |
+| CHK          | Checksum command           |
+| LIST         | List command               |
+| STAT         | Stat command               |
+| LEN          | Length                     |
+| OFF          | Offset                     |
+| WIN          | Flow window size           |
+| OLD          | Old connection ID          |
+| NEW          | New connection ID          |
+| MSG          | Message                    |
 {: title="Common abbreviations."}
