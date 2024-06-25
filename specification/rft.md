@@ -72,6 +72,12 @@ A point-to-point connection supports IP address migration, flow control, congest
 The protocol guarantees in-order delivery for all packets belonging to a stream.
 There is no such guarantee for messages belonging to different streams.
 
+RFT *messages* always consist of a single *Packet Header* and zero or multiple
+*Frames* appended continuously on the wire after the packet header without
+padding. Frames are either *data frames*, *error frames* or various types of
+control frames used for the connection initialization and negotiation, flow
+control, congestion control, acknowledgement or handling of commands.
+
 ## Keywords
 
 {::boilerplate bcp14-tagged}
