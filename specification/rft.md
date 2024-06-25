@@ -114,8 +114,8 @@ Command:
 a file transfer, usually opening up a new stream.
 
 Stream:
-: A logical channel within a connection that carries frames belonging to a
-particular request i.e. file transfer.
+: A logical channel within a connection that carries frames encapsulating
+a particular request i.e. file transfer.
 
 Sender:
 : The endpoint sending a packet or frame.
