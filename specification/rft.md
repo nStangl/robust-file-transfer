@@ -325,3 +325,41 @@ Client                                                       Server
 When a peer receives a packet for an unknown connection ID it SHOULD simply
 ignore it.
 
+## Termination {#termination}
+
+A connection can either be intentionally closed or timeout.
+
+### Tear Down {#tear-down}
+
+If a peer wishes to close the connection it simply sends a Exit frame.
+
+~~~~ LANGUAGE-REPLACE/DELETE
+Client                                                       Server
+   |                                                           |
+   |-----------------------[CID:5][EXIT]---------------------->|
+   |                                                           |
+   v                                                           v
+~~~~
+{: title='Graceful connection tear-down' }
+
+### Timeout {#timeout}
+
+If no packets were received for 5 minutes the connection is considered
+dead and the server SHOULD close it. Peers MAY send empty packets (i.e. packets
+without frames) to keep the connection alive beyond timeouts.
+
+## Migration {#migration}
+
+A connection is uniquely identified on both ends by the connection ID. As
+soon as a peer receives a packet for this connection ID from a different
+IP-address port pair, it must change its internal mapping and send all
+subsequent packets to the new address. Any packets lost in the meantime
+are subjects to retransmission. If a peer has nothing to send, but wishes
+to explicitly inform the other end of a migration, the peer MAY simply
+send an empty packet (thus a packet without frames).
+
+## Resumption {#resumption}
+
+RFT does not explicitly support connection recovery, but allows for resuming
+file transfers by the means of partial reads and writes via the corresponding
+offset and length fields in the ReadCommand and WriteCommand frames.
