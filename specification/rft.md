@@ -54,23 +54,30 @@ normative:
 
 --- abstract
 
-Robust File Transfer (RFT) is a file-transfer protocol on top of UDP.
-It is connection-oriented, stream-parallel and stateful, supporting connection migration based on connection IDs similar to QUIC.
-RFT provides point-to-point operation between a client and a server, enabling IP address migration, flow control, congestion control, and partial or resumed file transfers using offsets and lengths.
+Robust File Transfer (RFT) is a file-transfer protocol on top of UDP. It is
+connection-oriented, stream-parallel and stateful, supporting connection
+migration based on connection IDs similar to QUIC. RFT provides point-to-point
+operation between a client and a server, enabling IP address migration, flow
+control, congestion control, and partial or resumed file transfers using
+offsets and lengths.
 
 --- middle
 
 # Introduction {#introduction}
 
-The Protocol Design WG is tasked with standardizing an Application Protocol for a robust file transfer protocol, RFT.
-This protocol is intended to provide point-to-point operation between a client and a server built upon UDP {{RFC0768}}.
-It supports connection migration based on connection IDs, in spirit similar to QUIC {{RFC9000}}, although a bit easier.
+The Protocol Design WG is tasked with standardizing an Application Protocol for
+a robust file transfer protocol, RFT. This protocol is intended to provide
+point-to-point operation between a client and a server built upon UDP
+{{RFC0768}}. It supports connection migration based on connection IDs, in
+spirit similar to QUIC {{RFC9000}}, although a bit easier.
 
-RFT is based on UDP, connection-oriented, stateful and uses streams for each file transfer
-allowing for parallelization.
-A point-to-point connection supports IP address migration, flow control, congestion control and allows to transfers of a specific length and offset, which can be useful to resume interrupted transfers or partial transfers.
-The protocol guarantees in-order delivery for all packets belonging to a stream.
-There is no such guarantee for messages belonging to different streams.
+RFT is based on UDP, connection-oriented, stateful and uses streams for each
+file transfer allowing for parallelization. A point-to-point connection
+supports IP address migration, flow control, congestion control and allows to
+transfers of a specific length and offset, which can be useful to resume
+interrupted transfers or partial transfers. The protocol guarantees in-order
+delivery for all packets belonging to a stream. There is no such guarantee for
+messages belonging to different streams.
 
 RFT *messages* always consist of a single *Packet Header* and zero or multiple
 *Frames* appended continuously on the wire after the packet header without
@@ -125,12 +132,13 @@ Receiver:
 
 ## Notation {#notation}
 
-This document defines `U4`, `U8`, `U16`, `U32`, `U64` as unsigned 4-, 8-, 16-, 32-, or 64-bit integers.
-A `string` is a UTF-8 {{RFC3629}} encoded zero-terminated string.
+This document defines `U4`, `U8`, `U16`, `U32`, `U64` as unsigned 4-, 8-, 16-,
+32-, or 64-bit integers. A `string` is a UTF-8 {{RFC3629}} encoded
+zero-terminated string.
 
-Messages are represented in a C struct-like notation. They may be annotated by C-style comments.
-All members are laid out continuously on wire, any padding will be made explicit.
-Constant values are assigned with a "=".
+Messages are represented in a C struct-like notation. They may be annotated by
+C-style comments. All members are laid out continuously on wire, any padding
+will be made explicit. Constant values are assigned with a "=".
 
 ~~~~ LANGUAGE-REPLACE/DELETE
 StructName1 (Length) {
