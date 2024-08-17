@@ -240,7 +240,7 @@ topics, e.g. establishment, streams, reliability, congestion control and more.
 The sections after that explain the message format and framing in more detail,
 and lists all the different frame and command types.
 
-### Versioning {#versioning}
+# Versioning {#versioning}
 
 To ensure evolvability the packet header contains a 8-bit version field
 identifying the protocol version used by the sender. The server MUST validate
