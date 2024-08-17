@@ -239,3 +239,63 @@ The next sections provides detailed information about connection-related
 topics, e.g. establishment, streams, reliability, congestion control and more.
 The sections after that explain the message format and framing in more detail,
 and lists all the different frame and command types.
+
+# Connection
+
+The protocol is connection-based. Connections are identified a singular
+connection ID (CID) unique on both sides.
+
+## Establishment {#establishment}
+
+The connection establishment is and via a two-way handshake and is initiated by
+the client by sending a packet with connection ID 0. The server responds with
+the UDP packet having reversed IP addresses and ports, containing an RFT
+packet with the connection ID chosen by the server. The server knows all
+IDs of established connections and must make the new one is unique.
+
+~~~~ LANGUAGE-REPLACE/DELETE
+Client                                                       Server
+   |                                                           |
+   |-------------------------[CID:0]-------------------------->|
+   |                                                           |
+   |<------------------------[CID:1]---------------------------|
+   |                                                           |
+   v                                                           v
+~~~~
+{: title='Sequence diagram of simple connection establishment' }
+
+### Connection ID Negotiation {#connection-id-negotiation}
+
+This simple connection establishment is limited to a single handshake
+at a time per UDP source port. If the client wishes to establish multiple over
+a single port it can attach a ConnectionIdChangeFrame with a proposed
+connection ID for the new one (NEW) and 0 for the old one (OLD). The server
+acknowledges this and sends back the handshake response to that connection ID:
+
+~~~~ LANGUAGE-REPLACE/DELETE
+Client                                                       Server
+   |                                                           |
+   |-----------[CID:0][CHCID, FID:1, OLD:0, NEW:3]------------>|
+   |                                                           |
+   |<---------------[CID:3][ACK, SID:0, FID:1]-----------------|
+   |                                                           |
+   v                                                           v
+~~~~
+{: title='Sequence diagram of successful connection ID proposal' }
+
+In case the proposal is already used for another connection
+attaches another ConnectionIdChangeFrame (CHCID) with the new unique connection
+ID chosen by the server.
+
+~~~~ LANGUAGE-REPLACE/DELETE
+Client                                                       Server
+   |                                                           |
+   |-----------[CID:0][CHCID, FID:1, OLD:0, NEW:3]------------>|
+   |                                                           |
+   |<--[CID:3][ACK, SID:0, FID:1][CHCID, FID:1, OLD:3, NEW:9]--|
+   |                                                           |
+   |-----------------[CID:9][ACK, SID:0, FID:1]--------------->|
+   |                                                           |
+   v                                                           v
+~~~~
+{: title='Sequence diagram of unsuccessful connection ID proposal' }
