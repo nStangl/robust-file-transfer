@@ -240,7 +240,19 @@ topics, e.g. establishment, streams, reliability, congestion control and more.
 The sections after that explain the message format and framing in more detail,
 and lists all the different frame and command types.
 
-# Connection
+### Versioning {#versioning}
+
+To ensure evolvability the packet header contains a 8-bit version field
+identifying the protocol version used by the sender. The server MUST validate
+that the clients version is compatible with its own before responding to
+a handshake request during connection establishment. A peer SHALL NOT change
+the protocol version during the lifetime of the connection, and peers MAY
+revalidate the version at any time.
+
+As long as RFT is in draft stage with rapid breaking changes the peers SHOULD
+strictly match the version number.
+
+# Connection {#connection}
 
 The protocol is connection-based. Connections are identified a singular
 connection ID (CID) unique on both sides.
