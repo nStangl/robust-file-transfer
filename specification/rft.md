@@ -319,3 +319,9 @@ Client                                                       Server
    v                                                           v
 ~~~~
 {: title='Sequence diagram of unsuccessful connection ID proposal' }
+
+### Unknown Connection ID {#unknown-connection-id}
+
+When a peer receives a packet for an unknown connection ID it SHOULD simply
+ignore it.
+
