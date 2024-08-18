@@ -248,17 +248,71 @@ topics, e.g. establishment, streams, reliability, congestion control and more.
 The sections after that explain the message format and framing in more detail,
 and lists all the different frame and command types.
 
-# Versioning {#versioning}
+# Packet {#packet}
 
-To ensure evolvability the packet header contains a 8-bit version field
-identifying the protocol version used by the sender. The server MUST validate
-that the clients version is compatible with its own before responding to
-a handshake request during connection establishment. A peer SHALL NOT change
-the protocol version during the lifetime of the connection, and peers MAY
-revalidate the version at any time.
+The RFT packet is the basic unit of communication in the protocol. A single
+packet takes up the entire UDP payload and is composed of a header and a
+its own payload. The packet header is structured as follows:
+
+~~~~ language-REPLACE/DELETE
+PacketHeader (64) {
+  U8  Version,
+  U32 ConnectionID,
+  U24 PacketChecksum,
+}
+~~~~
+
+## Version {#version}
+
+To ensure evolvability the packet header contains a 8-bit version field.
+Most network protocols never hit a two-digit version number, therefore 8 bit is
+deemed sufficient.
+
+The version field identifies the protocol version used by the sender of the
+packet. Upon connection establishment server MUST validate that the clients
+version is compatible with its own before responding to a handshake request.
+A peer SHALL NOT change the protocol version during the lifetime of the
+connection, and peers MAY revalidate the version at any time.
 
 As long as RFT is in draft stage with rapid breaking changes the peers SHOULD
 strictly match the version number.
+
+## Connection ID {#connection-id}
+
+The 32-bit connection ID uniquely identifies the connection on both ends.
+32 bit allows for up to roughly 4 billion connections per UDP port. While
+this is not as extensive as QUIC {{RFC9000}}, it is deemed sufficient for a
+file transfer protocol. Deployments that require more client connections on a
+single server can obviously run multiple protocol instances on different server
+ports.
+
+The connection ID is negotiated during connection establishment, which is
+discussed in more detail in [Establishment](#establishment). The connection ID
+furthermore allows for connection migration, which is discussed in
+[Migration](#migration).
+
+## Packet Checksum {#packet-checksum}
+
+The packet checksum is a redundancy check to validate the integrity of packet.
+It contains the first 24-bit of the 32-bit cyclic redundancy check (CRC32)
+{{RFC3385}} of the entire packet, with the packet checksum itself set to 0.
+
+The length of the checksum is chosen for alignment reasons. Since CRC32 has
+a good entropy, "chopping off" 8 bit should not impede its effectiveness, and
+also in general make it a suitable choice.
+
+## Payload {#payload}
+
+The payload has a variable size but SHOULD be chosen such, that it does not
+produce IP packet fragmentation. So in a typical 1500 Byte MTU network with
+a minimal 20 Byte IP and 8 Byte UDP header, followed by the 64 Byte RFT header,
+up to 1408 Bytes can be used for the payload.
+
+The payload consists of zero, one, or multiple frames, that build a second
+level of packetization in the protocol. The come in different flavors allowing
+for flexible state exchange and are discussed in [Frames](#frames).
+They also provide the means for multistreaming which is presented in
+[Streams](#streams).
 
 # Connection {#connection}
 
