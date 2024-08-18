@@ -417,3 +417,13 @@ send an empty packet (thus a packet without frames).
 RFT does not explicitly support connection recovery, but allows for resuming
 file transfers by the means of partial reads and writes via the corresponding
 offset and length fields in the ReadCommand and WriteCommand frames.
+
+# Reliability {#reliability}
+
+# Frames {#frames}
+
+# Streams {#streams}
+
+# File Transfer {#file-transfer}
+
+# Message Format {#message-format}
