@@ -427,7 +427,7 @@ offset and length fields in the ReadCommand and WriteCommand frames.
 
 # File Transfer {#file-transfer}
 
-# Message Format {#message-format}
+# Wire Format {#wire-format}
 
 little endian for numbers
 
