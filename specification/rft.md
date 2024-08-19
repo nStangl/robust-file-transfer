@@ -143,13 +143,13 @@ will be made explicit. Constant values are assigned with a "=".
 ~~~~ LANGUAGE-REPLACE/DELETE
 StructName1 (Length) {
     TypeName1     FieldName1,
-    TypeName2     FieldName2,
+    TypeName2     FieldName2 = 0x123,
     TypeName3[4]  FieldName3,
     String        FieldName4,
     StructName2   FieldName5,
 }
 ~~~~
-{: title='Message format notation' }
+{: title="Message format notation" }
 
 The only scalar types are integer denoted with "U" for unsigned and "I" for
 signed integers. Strings are a composite type consisting of the size as "U16"
@@ -165,7 +165,7 @@ Client                                                       Server
    |                                                           |
    v                                                           v
 ~~~~
-{: title='Sequence diagram notation' }
+{: title="Sequence diagram notation" }
 
 The individual parts of the packets are enclosed by brackets and only the
 relevant values are shown. First we always have the RFT packet header,
@@ -225,7 +225,7 @@ The packet structure is shown in the following figure:
 |                            UDP SDU                            |
 +---------------------------------------------------------------+
 ~~~~
-{: title='General packet structure' }
+{: title="General packet structure" }
 
 The header contains a version field (VER) for evolvability, as connection
 ID (CID) uniquely identifying the connection on both ends, and a
@@ -256,11 +256,12 @@ its own payload. The packet header is structured as follows:
 
 ~~~~ language-REPLACE/DELETE
 PacketHeader (64) {
-  U8  Version,
-  U32 ConnectionID,
-  U24 PacketChecksum,
+  U8   Version = 1,
+  U32  ConnectionId,
+  U24  PacketChecksum,
 }
 ~~~~
+{: title="Packet header wire format" }
 
 ## Version {#version}
 
@@ -336,7 +337,7 @@ Client                                                       Server
    |                                                           |
    v                                                           v
 ~~~~
-{: title='Sequence diagram of simple connection establishment' }
+{: title="Sequence diagram of simple connection establishment" }
 
 ### Connection ID Negotiation {#connection-id-negotiation}
 
@@ -355,7 +356,7 @@ Client                                                       Server
    |                                                           |
    v                                                           v
 ~~~~
-{: title='Sequence diagram of successful connection ID proposal' }
+{: title="Sequence diagram of successful connection ID proposal" }
 
 In case the proposal is already used for another connection
 attaches another ConnectionIdChangeFrame (CHCID) with the new unique connection
@@ -372,7 +373,7 @@ Client                                                       Server
    |                                                           |
    v                                                           v
 ~~~~
-{: title='Sequence diagram of unsuccessful connection ID proposal' }
+{: title="Sequence diagram of unsuccessful connection ID proposal" }
 
 ### Unknown Connection ID {#unknown-connection-id}
 
@@ -394,7 +395,7 @@ Client                                                       Server
    |                                                           |
    v                                                           v
 ~~~~
-{: title='Graceful connection tear-down' }
+{: title="Graceful connection tear-down" }
 
 ### Timeout {#timeout}
 
@@ -427,3 +428,160 @@ offset and length fields in the ReadCommand and WriteCommand frames.
 # File Transfer {#file-transfer}
 
 # Message Format {#message-format}
+
+little endian for numbers
+
+| Frame Type Value | Frame Type                 |
+|  0               | Acknowledgement Frame      |
+|  1               | Exit Frame                 |
+|  2               | Connection ID Change Frame |
+|  3               | Flow Control Frame         |
+|  4               | Answer Frame               |
+|  5               | Error Frame                |
+|  6               | Data Frame                 |
+|  7               | Read Frame                 |
+|  8               | Write Frame                |
+|  9               | Checksum Frame             |
+| 10               | Stat Frame                 |
+| 11               | List Frame                 |
+{: title="Frame type definitions."}
+
+~~~~ language-REPLACE/DELETE
+PacketHeader (64) {
+  U8   Version = 1,
+  U32  ConnectionId,
+  U24  PacketChecksum,
+}
+~~~~
+{: title="Packet header wire format" }
+
+~~~~ language-REPLACE/DELETE
+Packet (len(Header) + len(Frames)) {
+  PacketHeader  Header,
+  Array[Frame]  Frames,
+}
+~~~~
+{: title="Packet wire format" }
+
+~~~~ language-REPLACE/DELETE
+AckFrame (56) {
+  U8   TypeID = 0,
+  U16  StreamID,
+  U32  FrameID,
+}
+~~~~
+{: title="Acknowledgment frame wire format" }
+
+~~~~ language-REPLACE/DELETE
+ExitFrame (8) {
+  U8  TypeID = 1,
+}
+~~~~
+{: title="Exit frame wire format" }
+
+~~~~ language-REPLACE/DELETE
+ConnIdChange (72) {
+  U8   TypeID = 2,
+  U32  OldConnId,
+  U32  NewConnId,
+}
+~~~~
+{: title="Connection ID Change frame wire format" }
+
+~~~~ language-REPLACE/DELETE
+FlowControl (40) {
+  U8   TypeID = 3,
+  U32  WindowSize,
+}
+~~~~
+{: title="Flow control frame wire format" }
+
+~~~~ language-REPLACE/DELETE
+AnswerFrame (88 + len(Payload)) {
+  U8         TypeID = 4,
+  U16        StreamId,
+  U32        FrameId,
+  U32        CommandFrameId,
+  ByteArray  Payload,
+}
+~~~~
+{: title="Answer frame wire format" }
+
+~~~~ language-REPLACE/DELETE
+ErrorFrame (56 + len(Message)) {
+  U8      TypeID = 5,
+  U16     StreamId,
+  U32     FrameId,
+  U32     CommandFrameId,
+  String  Message,
+}
+~~~~
+{: title="Error frame wire format" }
+
+~~~~ language-REPLACE/DELETE
+DataFrame (104 + len(Payload)) {
+  U8         TypeID = 6,
+  U16        StreamId,
+  U32        FrameId,
+  U48        Offset,
+  ByteArray  Payload,
+}
+~~~~
+{: title="Error frame wire format" }
+
+~~~~ language-REPLACE/DELETE
+ReadFrame (192 + len(Path)) {
+  U8      TypeID = 7,
+  U16     StreamId,
+  U32     FrameId,
+  U7      Reserved = 0,
+  Bool    ValidateChecksum,
+  U48     Offset,
+  U48     Length,
+  U32     Checksum,
+  String  Path,
+}
+~~~~
+{: title="Read frame wire format" }
+
+~~~~ language-REPLACE/DELETE
+WriteFrame (152 + len(Path)) {
+  U8      TypeID = 8,
+  U16     StreamId,
+  U32     FrameId,
+  U48     Offset,
+  U48     Length,
+  String  Path,
+}
+~~~~
+{: title="Write frame wire format" }
+
+~~~~ language-REPLACE/DELETE
+ChecksumFrame (56 + len(Path)) {
+  U8      TypeID = 9,
+  U16     StreamId,
+  U32     FrameId,
+  String  Path,
+}
+~~~~
+{: title="Checksum frame wire format" }
+
+~~~~ language-REPLACE/DELETE
+StatFrame (56 + len(Path)) {
+  U8      TypeID = 10,
+  U16     StreamId,
+  U32     FrameId,
+  String  Path,
+}
+~~~~
+{: title="Stat frame wire format" }
+
+~~~~ language-REPLACE/DELETE
+ListFrame (56 + len(Path)) {
+  U8      TypeID = 11,
+  U16     StreamId,
+  U32     FrameId,
+  String  Path,
+}
+~~~~
+{: title="List frame wire format" }
