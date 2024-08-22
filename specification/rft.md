@@ -213,13 +213,13 @@ It sits on-top of layer 4 with a single RFT packet send as a UDP SDU.
 The packet structure is shown in the following figure:
 
 ~~~~ LANGUAGE-REPLACE/DELETE
-                   +-----------+--------------------------------+
-                   | ACK Frame |       Data Frame       |  ...  |
-+------------------+-----------+--------------------------------+
-| VERS | CID | CRC |                                            |
-+------------------+      Payload (zero or multiple frames)     |
-|       Header     |                                            |
-+------------------+--------------------------------------------+
+                         +-----------+------------------+-------+
+                         | ACK Frame |    Data Frame    |  ...  |
++------+-----+-----+-----+-----------+------------------+-------+
+| VERS | CID | PID | CRC |                                      |
++------+-----+-----+-----+    Payload (zero/one/many frames)    |
+|       Header           |                                      |
++------------------------+--------------------------------------+
 |                           RFT Packet                          |
 +---------------------------------------------------------------+
 |                            UDP SDU                            |
@@ -228,14 +228,15 @@ The packet structure is shown in the following figure:
 {: title="General packet structure" }
 
 The header contains a version field (VER) for evolvability, as connection
-ID (CID) uniquely identifying the connection on both ends, and a
-cyclic-redundancy-check (CRC) checksum to validate the packet integrity.
+ID (CID) uniquely identifying the connection on both ends, a packet ID (PID)
+identifying the packet within the connection and a cyclic-redundancy-check
+(CRC) checksum to validate the packet integrity.
 
 After the header follows the payload which holds one or more RFT frames
 inspired by {{RFC9000}}. These serve both for data transfer as well as any
 additional logic besides version matching, connection identification, and
 packet integrity validation. The most important types are AckFrames for
-acknowledging frames based on their frame ID (FID), CommandFrames to issue
+acknowledging packets based on their packet ID (PID), CommandFrames to issue
 commands on the server, and DataFrames to transport data for the commands to
 read or write a file. File data in the ReadCommand and WriteCommand as well
 as in DataFrames is indexed by byte offset and length making both transfer
