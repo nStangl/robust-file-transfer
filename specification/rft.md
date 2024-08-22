@@ -521,7 +521,7 @@ ReadFrame {
   Path              = "./example/README.md",
 }
 ~~~~
-{: title="Read frame wire format" }
+{: title="Example read frame" }
 
 The following sequence diagram puts such frame into context
 (Note that we omit fields that are not relevant for the example):
@@ -556,9 +556,72 @@ flag to true, it MUST provide the CRC32 checksum of the already read portion
 and set the offset to the byte after that part. The server MUST then validate
 that the checksum matches for the file on its end and continue reading if it
 does. If the checksum does not match the server MUST back an ErrorFrame with
-a message "checksum mismatch".
+a message "Checksum mismatch".
 
 ## Write {#write}
+
+To write a file on the server the client sends a WriteFrame:
+
+~~~~ language-REPLACE/DELETE
+WriteFrame (120 + len(Path)) {
+  U8      TypeId = 8,
+  U16     StreamId,
+  U48     Offset,
+  U48     Length,
+  String  Path,
+}
+~~~~
+{: title="Example write frame" }
+
+In case of writing a file without specifying its size ahead of time the
+frame could look like this:
+
+~~~~ language-REPLACE/DELETE
+WriteFrame {
+  TypeId    = 8,
+  StreamId  = 1,
+  Offset    = 0,
+  Length    = 0,
+  Path      = "./example/README.md",
+}
+~~~~
+{: title="Example write frame" }
+
+The following sequence diagram puts such frame into context
+(Note that we omit fields that are not relevant for the example):
+
+~~~~ LANGUAGE-REPLACE/DELETE
+Client                                                       Server
+|                                                                 |
+|---[CID:3, PID:4][WRITE, SID:5, OFF:0, LEN:0, PATH:readme.md]--->|
+|                 [DATA, SID:5, OFF:0, LEN:1000]                  |
+|---------[CID:3, PID:5][DATA, SID:5, OFF:1000, LEN:1000]-------->|
+|---------[CID:3, PID:6][DATA, SID:5, OFF:2000, LEN:1000]-------->|
+|                                                                 |
+|<------------------[CID:3, PID:5][ACK, PID:6]--------------------|
+|                                                                 |
+|---------[CID:3, PID:7][DATA, SID:5, OFF:3000, LEN:1000]-------->|
+|                       [ACK, PID:5]                              |
+|---------[CID:3, PID:8][DATA, SID:5, OFF:4000, LEN:177]--------->|
+|                       [DATA, SID:5, OFF:4178, LEN:0]            |
+|                                                                 |
+|<------------------[CID:3, PID:6][ACK, PID:8]--------------------|
+|                                                                 |
+v                                                                 v
+~~~~
+{: title="Sequence diagram for an example file write" }
+
+WriteFrames do not contain a checksum field that requires any special handling.
+
+## Multiple Transfers {#multiple-transfers}
+
+TODO
+
+## Recovery
+
+TODO
+
+# Further Commands {#further-commands}
 
 TODO
 
