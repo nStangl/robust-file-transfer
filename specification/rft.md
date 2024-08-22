@@ -161,7 +161,7 @@ To visualize protocol runs we use the following sequence diagram notation:
 ~~~~ LANGUAGE-REPLACE/DELETE
 Client                                                       Server
    |                                                           |
-   |------[CID:1337][ACK, SID:1, FID:3][FLOW, SIZE:1000]------>|
+   |------[CID:1337, PID: 2][ACK, PID:3][FLOW, SIZE:1000]----->|
    |                                                           |
    v                                                           v
 ~~~~
@@ -177,10 +177,10 @@ We use the following abbreviations mostly in diagrams:
 | Abbreviation | Meaning                    |
 | ------------ | -------------------------- |
 | VERS         | Version                    |
-| CRC          | Packet checksum            |
 | CID          | Connection ID              |
+| PID          | Packet ID                  |
+| CRC          | Packet checksum            |
 | SID          | Stream ID                  |
-| FID          | Frame ID                   |
 | CMD          | Command frame              |
 | DATA         | Data frame                 |
 | ERR          | Error frame                |
