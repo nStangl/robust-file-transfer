@@ -259,6 +259,7 @@ its own payload. The packet header is structured as follows:
 PacketHeader (64) {
   U8   Version = 1,
   U32  ConnectionId,
+  U32  PacketId,
   U24  PacketChecksum,
 }
 ~~~~
@@ -292,6 +293,35 @@ The connection ID is negotiated during connection establishment, which is
 discussed in more detail in [Establishment](#establishment). The connection ID
 furthermore allows for connection migration, which is discussed in
 [Migration](#migration).
+
+## Packet ID {#packet-id}
+
+The 32-bit packet ID uniquely identifies a packet in one direction of the
+connection. Each peer maintains a counter starting at 1 that is incremented
+for each packet they send to the other side. The uniqueness only holds up
+to wrap-around, and implementations are REQUIRED to handle this properly.
+With a 32-bit ID and up to 1500 Byte packets, this means roughly 6 TByte of
+data can be transferred before a wrap-around occurs. Even with a 
+state-of-the-art 1 Tbit/s link, this would take 48 seconds which is deemed
+sufficient in comparison to timeouts and other protocol mechanisms.
+
+~~~~ LANGUAGE-REPLACE/DELETE
+Client                                                       Server
+PID|                                                           |PID
+---|                                                           |---
+ 1 |----------------------[CID:0, PID:1]---------------------->|
+   |<---------------------[CID:1, PID:1]-----------------------| 1
+ 2 |-------------------[CID:1, PID:2][...]-------------------->|
+   |<------------------[CID:1, PID:2][...]---------------------| 2
+ 3 |-------------------[CID:1, PID:3][...]-------------------->|
+   |<------------------[CID:1, PID:3][...]---------------------| 3
+   |<------------------[CID:1, PID:4][...]---------------------| 4
+   |<------------------[CID:1, PID:5][...]---------------------| 5
+ 4 |-------------------[CID:1, PID:4][...]-------------------->|
+   |                                                           |
+   v                                                           v
+~~~~
+{: title="Sequence diagram of packet ID incrementation" }
 
 ## Packet Checksum {#packet-checksum}
 
