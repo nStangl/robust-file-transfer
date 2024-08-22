@@ -478,9 +478,10 @@ little endian for numbers
 {: title="Frame type definitions."}
 
 ~~~~ language-REPLACE/DELETE
-PacketHeader (64) {
+PacketHeader (96) {
   U8   Version = 1,
   U32  ConnectionId,
+  U32  PacketId,
   U24  PacketChecksum,
 }
 ~~~~
@@ -495,24 +496,23 @@ Packet (len(Header) + len(Frames)) {
 {: title="Packet wire format" }
 
 ~~~~ language-REPLACE/DELETE
-AckFrame (56) {
-  U8   TypeID = 0,
-  U16  StreamID,
-  U32  FrameID,
+AckFrame (40) {
+  U8   TypeId = 0,
+  U32  PacketId,
 }
 ~~~~
 {: title="Acknowledgment frame wire format" }
 
 ~~~~ language-REPLACE/DELETE
 ExitFrame (8) {
-  U8  TypeID = 1,
+  U8  TypeId = 1,
 }
 ~~~~
 {: title="Exit frame wire format" }
 
 ~~~~ language-REPLACE/DELETE
 ConnIdChange (72) {
-  U8   TypeID = 2,
+  U8   TypeId = 2,
   U32  OldConnId,
   U32  NewConnId,
 }
@@ -521,50 +521,44 @@ ConnIdChange (72) {
 
 ~~~~ language-REPLACE/DELETE
 FlowControl (40) {
-  U8   TypeID = 3,
+  U8   TypeId = 3,
   U32  WindowSize,
 }
 ~~~~
 {: title="Flow control frame wire format" }
 
 ~~~~ language-REPLACE/DELETE
-AnswerFrame (88 + len(Payload)) {
-  U8         TypeID = 4,
-  U16        StreamId,
-  U32        FrameId,
-  U32        CommandFrameId,
-  ByteArray  Payload,
+AnswerFrame (24 + len(Payload)) {
+  U8     TypeId = 4,
+  U16    StreamId,
+  Bytes  Payload,
 }
 ~~~~
 {: title="Answer frame wire format" }
 
 ~~~~ language-REPLACE/DELETE
-ErrorFrame (56 + len(Message)) {
-  U8      TypeID = 5,
+ErrorFrame (24 + len(Message)) {
+  U8      TypeId = 5,
   U16     StreamId,
-  U32     FrameId,
-  U32     CommandFrameId,
   String  Message,
 }
 ~~~~
 {: title="Error frame wire format" }
 
 ~~~~ language-REPLACE/DELETE
-DataFrame (104 + len(Payload)) {
-  U8         TypeID = 6,
-  U16        StreamId,
-  U32        FrameId,
-  U48        Offset,
-  ByteArray  Payload,
+DataFrame (72 + len(Payload)) {
+  U8     TypeId = 6,
+  U16    StreamId,
+  U48    Offset,
+  Bytes  Payload,
 }
 ~~~~
 {: title="Error frame wire format" }
 
 ~~~~ language-REPLACE/DELETE
-ReadFrame (192 + len(Path)) {
-  U8      TypeID = 7,
+ReadFrame (160 + len(Path)) {
+  U8      TypeId = 7,
   U16     StreamId,
-  U32     FrameId,
   U7      Reserved = 0,
   Bool    ValidateChecksum,
   U48     Offset,
@@ -576,10 +570,9 @@ ReadFrame (192 + len(Path)) {
 {: title="Read frame wire format" }
 
 ~~~~ language-REPLACE/DELETE
-WriteFrame (152 + len(Path)) {
-  U8      TypeID = 8,
+WriteFrame (120 + len(Path)) {
+  U8      TypeId = 8,
   U16     StreamId,
-  U32     FrameId,
   U48     Offset,
   U48     Length,
   String  Path,
@@ -588,31 +581,52 @@ WriteFrame (152 + len(Path)) {
 {: title="Write frame wire format" }
 
 ~~~~ language-REPLACE/DELETE
-ChecksumFrame (56 + len(Path)) {
-  U8      TypeID = 9,
+ChecksumFrame (24 + len(Path)) {
+  U8      TypeId = 9,
   U16     StreamId,
-  U32     FrameId,
   String  Path,
 }
 ~~~~
 {: title="Checksum frame wire format" }
 
 ~~~~ language-REPLACE/DELETE
-StatFrame (56 + len(Path)) {
-  U8      TypeID = 10,
+StatFrame (24 + len(Path)) {
+  U8      TypeId = 10,
   U16     StreamId,
-  U32     FrameId,
   String  Path,
 }
 ~~~~
 {: title="Stat frame wire format" }
 
 ~~~~ language-REPLACE/DELETE
-ListFrame (56 + len(Path)) {
-  U8      TypeID = 11,
+ListFrame (24 + len(Path)) {
+  U8      TypeId = 11,
   U16     StreamId,
-  U32     FrameId,
   String  Path,
 }
 ~~~~
 {: title="List frame wire format" }
+
+~~~~ language-REPLACE/DELETE
+Path (2 + Length) {
+  U16           Length,
+  Char[Length]  Buffer,
+}
+~~~~
+{: title="Path wire format" }
+
+~~~~ language-REPLACE/DELETE
+String (2 + Length) {
+  U16           Length,
+  Char[Length]  Buffer,
+}
+~~~~
+{: title="String wire format" }
+
+~~~~ language-REPLACE/DELETE
+Bytes (2 + Length) {
+  U16         Length,
+  U8[Length]  Buffer,
+}
+~~~~
+{: title="Bytes wire format" }
