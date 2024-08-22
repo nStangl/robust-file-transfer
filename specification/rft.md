@@ -362,9 +362,9 @@ IDs of established connections and must make the new one is unique.
 ~~~~ LANGUAGE-REPLACE/DELETE
 Client                                                       Server
    |                                                           |
-   |-------------------------[CID:0]-------------------------->|
+   |----------------------[CID:0, PID:1]---------------------->|
    |                                                           |
-   |<------------------------[CID:1]---------------------------|
+   |<---------------[CID:1, PID:1][ACK, PID:1]-----------------|
    |                                                           |
    v                                                           v
 ~~~~
@@ -381,9 +381,9 @@ acknowledges this and sends back the handshake response to that connection ID:
 ~~~~ LANGUAGE-REPLACE/DELETE
 Client                                                       Server
    |                                                           |
-   |-----------[CID:0][CHCID, FID:1, OLD:0, NEW:3]------------>|
+   |-----------[CID:0, PID:1][CHCID, OLD:0, NEW:3]------------>|
    |                                                           |
-   |<---------------[CID:3][ACK, SID:0, FID:1]-----------------|
+   |<---------------[CID:3, PID:1][ACK, PID:1]-----------------|
    |                                                           |
    v                                                           v
 ~~~~
@@ -396,11 +396,11 @@ ID chosen by the server.
 ~~~~ LANGUAGE-REPLACE/DELETE
 Client                                                       Server
    |                                                           |
-   |-----------[CID:0][CHCID, FID:1, OLD:0, NEW:3]------------>|
+   |-----------[CID:0, PID:1][CHCID, OLD:0, NEW:3]------------>|
    |                                                           |
-   |<--[CID:3][ACK, SID:0, FID:1][CHCID, FID:1, OLD:3, NEW:9]--|
+   |<-----[CID:3, PID:1][ACK, PID:1][CHCID, OLD:3, NEW:9]------|
    |                                                           |
-   |-----------------[CID:9][ACK, SID:0, FID:1]--------------->|
+   |-----------------[CID:9, PID:2][ACK, PID:1]--------------->|
    |                                                           |
    v                                                           v
 ~~~~
@@ -422,7 +422,7 @@ If a peer wishes to close the connection it simply sends a Exit frame.
 ~~~~ LANGUAGE-REPLACE/DELETE
 Client                                                       Server
    |                                                           |
-   |-----------------------[CID:5][EXIT]---------------------->|
+   |------------------[CID:5, PID:125][EXIT]------------------>|
    |                                                           |
    v                                                           v
 ~~~~
