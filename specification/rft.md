@@ -156,6 +156,21 @@ signed integers. Strings are a composite type consisting of the size as "U16"
 followed by ASCII-characters. Padding is made explicit via the field name
 "Padding" and constant values are assigned with a "=".
 
+To exemplify a actual message example we use the following notation
+omitting type names and again making use of "=":
+
+~~~~ LANGUAGE-REPLACE/DELETE
+StructName1 {
+    FieldName1  = 0,
+    FieldName2  = 0x123,
+    FieldName3  = [1, 2, 3, 4],
+    FieldName4  = "Hello",
+    FieldName5  = { ... },
+    Padding     = 0,
+}
+~~~~
+{: title="Filled message format notation" }
+
 To visualize protocol runs we use the following sequence diagram notation:
 
 ~~~~ LANGUAGE-REPLACE/DELETE
