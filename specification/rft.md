@@ -467,13 +467,93 @@ offset and length fields in the ReadCommand and WriteCommand frames.
 
 # Reliability {#reliability}
 
+TODO
+
 # Frames {#frames}
+
+TODO
 
 # Streams {#streams}
 
+TODO
+
 # File Transfer {#file-transfer}
 
+File transfers in either direction are initiated by the client via the
+respective command (read or write) frames send on a new stream. Following that
+data and acknowledgement frames are exchanged until the transfer is complete,
+indicated by an empty end-of-file (EOF) data frame.
+
+Both read and write frames indicate the path of the file together with the
+offset and length to be transferred. An offset of 0 indicates starting at the
+beginning of the file, a length of 0 indicates transferring everything from
+the offset up to the end of the file.
+
+## Read {#read}
+
+To read a file from the server the client sends a ReadFrame:
+
+~~~~ language-REPLACE/DELETE
+ReadFrame (160 + len(Path)) {
+  U8      TypeId = 7,
+  U16     StreamId,
+  U7      Reserved = 0,
+  Bool    ValidateChecksum,
+  U48     Offset,
+  U48     Length,
+  U32     Checksum,
+  String  Path,
+}
+~~~~
+{: title="Read frame wire format" }
+
+In case of reading an entire file the frame could look like this:
+
+~~~~ language-REPLACE/DELETE
+ReadFrame {
+  TypeId            = 7,
+  StreamId          = 1,
+  Reserved          = 0,
+  ValidateChecksum  = false,
+  Offset            = 0,
+  Length            = 0,
+  Checksum          = 0,
+  Path              = "./example/README.md",
+}
+~~~~
+{: title="Read frame wire format" }
+
+The following sequence diagram puts such frame into context
+(Note that we omit fields that are not relevant for the example):
+
+~~~~ LANGUAGE-REPLACE/DELETE
+Client                                                       Server
+|                                                                 |
+|----[CID:3, PID:4][READ, SID:5, OFF:0, LEN:0, PATH:readme.md]--->|
+|                                                                 |
+|<---[CID:3, PID:10][ACK, PID:4][DATA, SID:5, OFF:0, LEN:1000]----|
+|<--------[CID:3, PID:11][DATA, SID:5, OFF:1000, LEN:1000]--------|
+|<--------[CID:3, PID:12][DATA, SID:5, OFF:2000, LEN:1000]--------|
+|                                                                 |
+|-------------------[CID:3, PID:5][ACK, PID:12]------------------>|
+|                                                                 |
+|<--------[CID:3, PID:13][DATA, SID:5, OFF:3000, LEN:1000]--------|
+|<--------[CID:3, PID:14][DATA, SID:5, OFF:4000, LEN:177]---------|
+|                        [DATA, SID:5, OFF:4178, LEN:0]           |
+|                                                                 |
+|------------------[CID:3, PID:6][ACK, PID:14]------------------->|
+|                                                                 |
+v                                                                 v
+~~~~
+{: title="Sequence diagram for an example file read" }
+
+## Write {#write}
+
+TODO
+
 # Wire Format {#wire-format}
+
+TODO
 
 little endian for numbers
 
