@@ -538,6 +538,7 @@ Client                                                       Server
 |-------------------[CID:3, PID:5][ACK, PID:12]------------------>|
 |                                                                 |
 |<--------[CID:3, PID:13][DATA, SID:5, OFF:3000, LEN:1000]--------|
+|                        [ACK, PID:5]                             |
 |<--------[CID:3, PID:14][DATA, SID:5, OFF:4000, LEN:177]---------|
 |                        [DATA, SID:5, OFF:4178, LEN:0]           |
 |                                                                 |
@@ -546,6 +547,16 @@ Client                                                       Server
 v                                                                 v
 ~~~~
 {: title="Sequence diagram for an example file read" }
+
+Aside from the already discussed fields the ReadFrame also contains a
+boolean ValidateChecksum flag together with the optional Checksum field.
+These allow the client to ensure that the already read portion is still the
+same before continuing to read it. When the client sets the ValidateChecksum
+flag to true, it MUST provide the CRC32 checksum of the already read portion
+and set the offset to the byte after that part. The server MUST then validate
+that the checksum matches for the file on its end and continue reading if it
+does. If the checksum does not match the server MUST back an ErrorFrame with
+a message "checksum mismatch".
 
 ## Write {#write}
 
