@@ -603,7 +603,7 @@ When a sender receives this frame it MUST NOT exceed the indicated limit.
 The following example shows how the peer SHOULD react:
 
 ~~~~ LANGUAGE-REPLACE/DELETE
-Client                                                       Server
+   Client                                                     Server
      |                                                           |
 FWND |                                                           |
 ---- |                                                           |
