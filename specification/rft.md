@@ -635,10 +635,19 @@ to trigger retransmission on the sender side.
 # Frames {#frames}
 
 TODO
+- benefits
+- types
+- fixed vs variable size
 
 # Streams {#streams}
 
 TODO
+- frames
+- stream id
+- stream 0
+- management
+- creation
+- termination
 
 # File Transfer {#file-transfer}
 
