@@ -624,7 +624,13 @@ FWND |                                                           |
 
 ## Checksumming {#checksumming}
 
-TODO
+For the integrity validation of the transmission the partial CRC32 checksum
+in the packet header is used. Before processing a packet any further the
+receiver MUST verify that the checksum calculated over the remaining packet
+matches the one in the header. If it does not the packet MUST be discarded
+as not even the connection or packet IDs that are required to issue a
+fast retransmission can be trusted. The receiver has to wait for a timeout
+to trigger retransmission on the sender side.
 
 # Frames {#frames}
 
