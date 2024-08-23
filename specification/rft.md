@@ -587,7 +587,40 @@ slow start where the threshold set to half the number of packets inflight.
 
 ## Flow Control {#flow-control}
 
-TODO
+To avoid overwhelming the receiver it indicates its available receive buffer
+size for flow window (FWND) via FlowControl frames:
+
+~~~~ language-REPLACE/DELETE
+FlowControl (40) {
+  U8   TypeId = 3,
+  U32  WindowSize,
+}
+~~~~
+{: title="Flow control frame wire format" }
+
+The window size is the number of bytes left in the receive buffer.
+When a sender receives this frame it MUST NOT exceed the indicated limit.
+The following example shows how the peer SHOULD react:
+
+~~~~ LANGUAGE-REPLACE/DELETE
+Client                                                       Server
+     |                                                           |
+FWND |                                                           |
+---- |                                                           |
+4500 |<------[CID:3, PID:10][DATA, SID:2, OFF:0, LEN:1000]-------|
+3500 |<-----[CID:3, PID:11][DATA, SID:2, OFF:1000, LEN:1000]-----|
+2500 |<-----[CID:3, PID:12][DATA, SID:2, OFF:2000, LEN:1000]-----|
+1500 |<-----[CID:3, PID:13][DATA, SID:2, OFF:3000, LEN:1000]-----|
+     |                                                           |
+     |--------[CID:3, PID:4][ACK, PID:13][FLOW, WND:1500]------->|
+     |                                                           |
+1000 |<-----[CID:3, PID:14][DATA, SID:2, OFF:4000, LEN:500]------|
+ 500 |<-----[CID:3, PID:15][DATA, SID:2, OFF:4500, LEN:500]------|
+     |                           ...                             |
+     |                                                           |
+     v                                                           v
+~~~~
+{: title='Example sequence diagram of fast retransmission (FRT)' }
 
 ## Checksumming {#checksumming}
 
