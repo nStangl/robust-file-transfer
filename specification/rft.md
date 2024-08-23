@@ -565,7 +565,25 @@ Client                                                       Server
 
 ## Congestion Control {#congestion-control}
 
-TODO
+Congestion control is inspired by TCP's AIMD {{RFC0768}}.
+A congestion window (CWND) limits the amount of bytes in-flight.
+The window scaling goes through two phases:
+
+### Slow Start
+
+The congestion window starts at 1 and is updated for each packet
+containing an AckFrame as "CWND_NEW = min(2 * CWND, FWND)" with FWND being
+the window indicated by flow control, and ends once the slow start threshold
+is reached.
+
+### Congestion Avoidance
+
+After the slow start the AIMD (additive increase, multiplicative decrease)
+algorithm is used. The congestion window is increased by one for each
+acknowledged packet. In case a retransmission is necessary congestion is
+assumed and the congestion window is halved and avoidance continues from there.
+A timeout causes a reset of the congestion window to one and continues with a
+slow start where the threshold set to half the number of packets inflight.
 
 ## Flow Control {#flow-control}
 
