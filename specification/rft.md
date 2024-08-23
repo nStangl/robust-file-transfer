@@ -465,7 +465,29 @@ RFT does not explicitly support connection recovery, but allows for resuming
 file transfers by the means of partial reads and writes via the corresponding
 offset and length fields in the ReadCommand and WriteCommand frames.
 
-# Reliability {#reliability}
+# Robustness {#robustness}
+
+The protocol has multiple mechanisms to ensure transmissions are complete,
+in-order and integrity is maintained, while not overwhelming the receiver
+or the network.
+
+## In-Order Delivery {#in-order-delivery}
+
+TODO
+
+## Acknowledgements {#acknowledgements}
+
+TODO
+
+## Congestion Control {#congestion-control}
+
+TODO
+
+## Flow Control {#flow-control}
+
+TODO
+
+## Checksumming {#checksumming}
 
 TODO
 
