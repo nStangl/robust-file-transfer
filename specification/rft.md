@@ -469,11 +469,16 @@ offset and length fields in the ReadCommand and WriteCommand frames.
 
 The protocol has multiple mechanisms to ensure transmissions are complete,
 in-order and integrity is maintained, while not overwhelming the receiver
-or the network.
+or the network. It takes inspiration from both QUIC {{RFC9000}} and TCP
+{{RFC0768}}.
 
 ## In-Order Delivery {#in-order-delivery}
 
-TODO
+The [Packet ID](#packet-id) is a monotonically increasing counter for the packets send
+by a peer. It thus allows the receiving side to determine the order in which
+packets were sent out. An implementation SHOULD be able to buffer packets
+for a short time within limits of a timeout to counteract reordering that might
+have occurred in the network before requesting retransmissions.
 
 ## Acknowledgements {#acknowledgements}
 
