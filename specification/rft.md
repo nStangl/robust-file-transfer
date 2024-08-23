@@ -476,9 +476,12 @@ or the network. It takes inspiration from both QUIC {{RFC9000}} and TCP
 
 The [Packet ID](#packet-id) is a monotonically increasing counter for the packets send
 by a peer. It thus allows the receiving side to determine the order in which
-packets were sent out. An implementation SHOULD be able to buffer packets
-for a short time within limits of a timeout to counteract reordering that might
-have occurred in the network before requesting retransmissions.
+packets were sent out. Streams do not have a separate ordering mechanism, so
+implementations are REQUIRED to process frames only after all previous packets
+and thus frames have been completely handled. An implementation SHOULD be able
+to buffer packets for a short time within limits of a timeout to counteract
+reordering that might have occurred in the network before requesting
+retransmissions.
 
 ## Acknowledgements {#acknowledgements}
 
@@ -505,12 +508,60 @@ Client                                                       Server
    |----------------[CID:3, PID:4][ACK, PID:12]--------------->|
    |                                                           |
    v                                                           v
-~~~~
-{: title='Sequence diagram of cumulative packet acknowledgement' }
+    ~~~~
+{: title='Example sequence diagram of cumulative acknowledgement' }
 
 ## Retransmission {#retransmission}
 
-TODO
+There are two ways retransmissions are triggered.
+
+### Retransmission Timeout {#retransmission-timeout}
+If sender does not receive an AckFrame for a packet or a later one
+within the retransmission timeout (RTO) of 1 second a normal
+retransmission (RT) is triggered:
+
+~~~~ LANGUAGE-REPLACE/DELETE
+Client                                                       Server
+   |                                                           |
+   |   X---[CID:3, PID:10][DATA, SID:2, OFF:0, LEN:1000]-------| 0s
+   |   X--[CID:3, PID:11][DATA, SID:2, OFF:1000, LEN:1000]-----|
+   |<-----[CID:3, PID:12][DATA, SID:2, OFF:2000, LEN:1000]-----|
+   |<-----[CID:3, PID:13][DATA, SID:2, OFF:3000, LEN:1000]-----|
+   |<-----[CID:3, PID:14][DATA, SID:2, OFF:4000, LEN:1000]-----| RTO
+   |                                                           |
+   |<------[CID:3, PID:10][DATA, SID:2, OFF:0, LEN:1000]-------| RT
+   |<-----[CID:3, PID:11][DATA, SID:2, OFF:1000, LEN:1000]-----|
+   |<-----[CID:3, PID:12][DATA, SID:2, OFF:2000, LEN:1000]-----|
+   |                                                           |
+   |----------------[CID:3, PID:4][ACK, PID:12]--------------->| ACK
+   |                           ...                             |
+   |                                                           |
+   v                                                           v
+~~~~
+{: title='Example sequence diagram of retransmission (RT)' }
+
+### Fast Retransmission {#fast-retransmission}
+
+The receiver can also request a fast retransmission (FRT)
+by sending a duplicate AckFrame (DACK) for the last packet it received:
+
+~~~~ LANGUAGE-REPLACE/DELETE
+Client                                                       Server
+   |                                                           |
+   |<------[CID:3, PID:10][DATA, SID:2, OFF:0, LEN:1000]-------| 0s
+   |   X--[CID:3, PID:11][DATA, SID:2, OFF:1000, LEN:1000]-----| LOSS
+   |   X--[CID:3, PID:12][DATA, SID:2, OFF:2000, LEN:1000]-----|
+   |<-----[CID:3, PID:13][DATA, SID:2, OFF:3000, LEN:1000]-----|
+   |                                                           |
+   |---------[CID:3, PID:4][ACK, PID:10][ACK, PID:10]--------->| DACK
+   |                                                           |
+   |<------[CID:3, PID:10][DATA, SID:2, OFF:1000, LEN:1000]----| FRT
+   |<------[CID:3, PID:11][DATA, SID:2, OFF:2000, LEN:1000]----| 
+   |                           ...                             |
+   |                                                           |
+   v                                                           v
+~~~~
+{: title='Example sequence diagram of fast retransmission (FRT)' }
 
 ## Congestion Control {#congestion-control}
 
