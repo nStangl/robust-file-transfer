@@ -482,6 +482,34 @@ have occurred in the network before requesting retransmissions.
 
 ## Acknowledgements {#acknowledgements}
 
+To ensure completeness the receiver acknowledges packets via AckFrames:
+
+~~~~ language-REPLACE/DELETE
+AckFrame (40) {
+  U8   TypeId = 0,
+  U32  PacketId,
+}
+~~~~
+{: title="Acknowledgment frame wire format" }
+
+It contains the last consecutively received packet ID and thus acknowledges
+all packets up to that point cumulatively:
+
+~~~~ LANGUAGE-REPLACE/DELETE
+Client                                                       Server
+   |                                                           |
+   |<------[CID:3, PID:10][DATA, SID:2, OFF:0, LEN:1000]-------|
+   |<-----[CID:3, PID:11][DATA, SID:2, OFF:1000, LEN:1000]-----|
+   |<-----[CID:3, PID:12][DATA, SID:2, OFF:2000, LEN:1000]-----|
+   |                                                           |
+   |----------------[CID:3, PID:4][ACK, PID:12]--------------->|
+   |                                                           |
+   v                                                           v
+~~~~
+{: title='Sequence diagram of cumulative packet acknowledgement' }
+
+## Retransmission {#retransmission}
+
 TODO
 
 ## Congestion Control {#congestion-control}
