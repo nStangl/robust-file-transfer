@@ -14,9 +14,6 @@ on:
       - 'rft.md'
     branches: [ main ]
 
-env:
-  CARGO_TERM_COLOR: always
-
 jobs:
   build:
     name: build
@@ -28,6 +25,9 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v4
       - name: Install requirements
-        run: sudo apt update && sudo apt install build-essential -y
+        run: |
+          sudo apt update && \
+          sudo apt install build-essential xml2rfc ruby-full -y && \
+          gem install kramdown-rfc2629
       - name: Build
         run: make ${{ matrix.target }}
