@@ -1,3 +1,4 @@
+.PHONY: all
 all: rft.txt
 
 %.txt: %.xml
@@ -6,5 +7,6 @@ all: rft.txt
 %.xml: %.md
 	kramdown-rfc $< > $@
 
+.PHONY: clean
 clean:
 	rm -f *.xml *.txt
