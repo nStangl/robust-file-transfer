@@ -27,15 +27,15 @@ jobs:
           sudo apt install build-essential xml2rfc ruby-full fonts-roboto -y && \
           sudo gem install kramdown-rfc2629
       - name: Build
-        run: make
+        run: |
+          make && \
+          mkdir -p artifact && \
+          mv rft.txt rft.html rft.pdf artifact
       - name: Upload artifacts
         uses: actions/upload-pages-artifact@v3
         with:
           name: rft
-          path: |
-            rft.txt
-            rft.html
-            rft.pdf
+          path: artifact
   deploy:
     name: deploy
     needs: build
