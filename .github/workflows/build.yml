@@ -1,0 +1,33 @@
+name: build
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  push:
+    paths:
+      - '.github/workflows/build.yml'
+      - 'rft.md'
+    branches: [ main ]
+  pull_request:
+    paths:
+      - '.github/workflows/lint.yml'
+      - 'rft.md'
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: [txt, html, pdf]
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Install requirements
+        run: sudo apt update && sudo apt install build-essential -y
+      - name: Build
+        run: make ${{ matrix.target }}
