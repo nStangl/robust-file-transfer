@@ -18,16 +18,13 @@ jobs:
   build:
     name: build
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        target: [txt, html, pdf]
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
       - name: Install requirements
         run: |
           sudo apt update && \
-          sudo apt install build-essential xml2rfc ruby-full -y && \
+          sudo apt install build-essential xml2rfc ruby-full fonts-roboto -y && \
           sudo gem install kramdown-rfc2629
       - name: Build
-        run: make ${{ matrix.target }}
+        run: make
