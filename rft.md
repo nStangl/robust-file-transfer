@@ -508,7 +508,7 @@ Client                                                       Server
    |----------------[CID:3, PID:4][ACK, PID:12]--------------->|
    |                                                           |
    v                                                           v
-    ~~~~
+~~~~
 {: title="Example sequence diagram of cumulative acknowledgement" }
 
 ## Retransmission {#retransmission}
