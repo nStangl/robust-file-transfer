@@ -1,20 +1,8 @@
-.PHONY: txt
-txt: rft.txt
+.PHONY: all
+all: rft.txt rft.html rft.pdf
 
-%.txt: %.xml
-	xml2rfc $<
-
-.PHONY: html
-html: rft.html
-
-%.html: %.xml
-	xml2rfc $< --html
-
-.PHONY: pdf
-pdf: rft.pdf
-
-%.pdf: %.xml
-	xml2rfc $< --pdf
+%.txt %.html %.pdf: %.xml
+	xml2rfc --v3 --text --html --pdf $<
 
 .PHONY: xml
 xml: rft.xml
