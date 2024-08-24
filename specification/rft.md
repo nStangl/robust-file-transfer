@@ -251,9 +251,9 @@ After the header follows the payload which holds one or more RFT frames
 inspired by {{RFC9000}}. These serve both for data transfer as well as any
 additional logic besides version matching, connection identification, and
 packet integrity validation. The most important types are AckFrames for
-acknowledging packets based on their packet ID (PID), CommandFrames to issue
+acknowledging packets based on their packet ID (PID), command frames to issue
 commands on the server, and DataFrames to transport data for the commands to
-read or write a file. File data in the ReadCommand and WriteCommand as well
+read or write a file. File data in the ReadFrame and WriteFrame as well
 as in DataFrames is indexed by byte offset and length making both transfer
 recovery and parallel transfers even of different parts of the same file
 possible. Each transfer is encapsulated in a stream identified by a stream
@@ -290,7 +290,7 @@ The version field identifies the protocol version used by the sender of the
 packet. Upon connection establishment server MUST validate that the clients
 version is compatible with its own before responding to a handshake request.
 A peer SHALL NOT change the protocol version during the lifetime of the
-connection, and peers MAY revalidate the version at any time.
+connection, and peers MAY re-validate the version at any time.
 
 As long as RFT is in draft stage with rapid breaking changes the peers SHOULD
 strictly match the version number.
@@ -316,7 +316,7 @@ connection. Each peer maintains a counter starting at 1 that is incremented
 for each packet they send to the other side. The uniqueness only holds up
 to wrap-around, and implementations are REQUIRED to handle this properly.
 With a 32-bit ID and up to 1500 Byte packets, this means roughly 6 TByte of
-data can be transferred before a wrap-around occurs. Even with a 
+data can be transferred before a wrap-around occurs. Even with a
 state-of-the-art 1 Tbit/s link, this would take 48 seconds which is deemed
 sufficient in comparison to timeouts and other protocol mechanisms.
 
@@ -463,7 +463,7 @@ send an empty packet (thus a packet without frames).
 
 RFT does not explicitly support connection recovery, but allows for resuming
 file transfers by the means of partial reads and writes via the corresponding
-offset and length fields in the ReadCommand and WriteCommand frames.
+offset and length fields in the Read- and WriteFrames.
 
 # Robustness {#robustness}
 
@@ -493,7 +493,7 @@ AckFrame (40) {
   U32  PacketId,
 }
 ~~~~
-{: title="Acknowledgment frame wire format" }
+{: title="Acknowledgement frame wire format" }
 
 It contains the last consecutively received packet ID and thus acknowledges
 all packets up to that point cumulatively:
@@ -509,7 +509,7 @@ Client                                                       Server
    |                                                           |
    v                                                           v
     ~~~~
-{: title='Example sequence diagram of cumulative acknowledgement' }
+{: title="Example sequence diagram of cumulative acknowledgement" }
 
 ## Retransmission {#retransmission}
 
@@ -538,7 +538,7 @@ Client                                                       Server
    |                                                           |
    v                                                           v
 ~~~~
-{: title='Example sequence diagram of retransmission (RT)' }
+{: title="Example sequence diagram of retransmission (RT)" }
 
 ### Fast Retransmission {#fast-retransmission}
 
@@ -556,12 +556,12 @@ Client                                                       Server
    |---------[CID:3, PID:4][ACK, PID:10][ACK, PID:10]--------->| DACK
    |                                                           |
    |<------[CID:3, PID:10][DATA, SID:2, OFF:1000, LEN:1000]----| FRT
-   |<------[CID:3, PID:11][DATA, SID:2, OFF:2000, LEN:1000]----| 
+   |<------[CID:3, PID:11][DATA, SID:2, OFF:2000, LEN:1000]----|
    |                           ...                             |
    |                                                           |
    v                                                           v
 ~~~~
-{: title='Example sequence diagram of fast retransmission (FRT)' }
+{: title="Example sequence diagram of fast retransmission (FRT)" }
 
 ## Congestion Control {#congestion-control}
 
@@ -583,7 +583,7 @@ algorithm is used. The congestion window is increased by one for each
 acknowledged packet. In case a retransmission is necessary congestion is
 assumed and the congestion window is halved and avoidance continues from there.
 A timeout causes a reset of the congestion window to one and continues with a
-slow start where the threshold set to half the number of packets inflight.
+slow start where the threshold set to half the number of packets in-flight.
 
 ## Flow Control {#flow-control}
 
@@ -620,7 +620,7 @@ FWND |                                                           |
      |                                                           |
      v                                                           v
 ~~~~
-{: title='Example sequence diagram of fast retransmission (FRT)' }
+{: title = "Example sequence diagram of fast retransmission (FRT)" }
 
 ## Checksumming {#checksumming}
 
@@ -842,7 +842,7 @@ AckFrame (40) {
   U32  PacketId,
 }
 ~~~~
-{: title="Acknowledgment frame wire format" }
+{: title="Acknowledgement frame wire format" }
 
 ~~~~ language-REPLACE/DELETE
 ExitFrame (8) {
