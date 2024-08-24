@@ -16,6 +16,9 @@ pdf: rft.pdf
 %.pdf: %.xml
 	xml2rfc $< --pdf
 
+.PHONY: xml
+xml: rft.xml
+
 %.xml: %.md
 	kramdown-rfc $< > $@
 
