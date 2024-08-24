@@ -31,4 +31,4 @@ spellcheck: rft.md
 
 .PHONY: clean
 clean:
-	rm -f *.xml *.txt *.html *.pdf
+	rm -f rft.xml rft.txt rft.html rft.pdf
