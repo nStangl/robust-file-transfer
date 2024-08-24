@@ -11,6 +11,10 @@ rfc: rft.txt
 view: rft.txt
 	less $<
 
+.PHONY: spellcheck
+spellcheck: rft.md
+	cargo spellcheck --cfg=spellcheck.toml $<
+
 .PHONY: clean
 clean:
 	rm -f *.xml *.txt
