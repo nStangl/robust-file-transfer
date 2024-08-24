@@ -1,15 +1,35 @@
-.PHONY: rfc
-rfc: rft.txt
+.PHONY: txt
+txt: rft.txt
 
 %.txt: %.xml
 	xml2rfc $<
 
+.PHONY: html
+html: rft.html
+
+%.html: %.xml
+	xml2rfc $< --html
+
+.PHONY: pdf
+pdf: rft.pdf
+
+%.pdf: %.xml
+	xml2rfc $< --pdf
+
 %.xml: %.md
 	kramdown-rfc $< > $@
 
-.PHONY: view
-view: rft.txt
+.PHONY: view-txt
+view-txt: rft.txt
 	less $<
+
+.PHONY: view-html
+view-html: rft.html
+	chromium $<
+
+.PHONY: view-pdf
+view-pdf: rft.pdf
+	evince $<
 
 .PHONY: spellcheck
 spellcheck: rft.md
@@ -17,4 +37,4 @@ spellcheck: rft.md
 
 .PHONY: clean
 clean:
-	rm -f *.xml *.txt
+	rm -f *.xml *.txt *.html *.pdf
