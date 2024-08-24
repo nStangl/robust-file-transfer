@@ -30,7 +30,7 @@ jobs:
         run: |
           make && \
           mkdir -p artifact && \
-          mv rft.txt rft.html rft.pdf artifact
+          mv index.html rft.txt rft.html rft.pdf artifact
       - name: Upload artifacts
         uses: actions/upload-pages-artifact@v3
         with:
