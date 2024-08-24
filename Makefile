@@ -1,5 +1,5 @@
-.PHONY: all
-all: rft.txt
+.PHONY: rfc
+rfc: rft.txt
 
 %.txt: %.xml
 	xml2rfc $<
