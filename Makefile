@@ -22,6 +22,9 @@ xml: rft.xml
 %.xml: %.md
 	kramdown-rfc $< > $@
 
+.PHONY: view
+view: view-txt
+
 .PHONY: view-txt
 view-txt: rft.txt
 	less $<
