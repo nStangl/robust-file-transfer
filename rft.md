@@ -293,7 +293,7 @@ and lists all the different frame and command types.
 
 # Packet {#packet}
 
-The RFT packet is the basic unit of communication in the protocol. A single
+The RFT packet is the basic transport unit in the protocol. A single
 packet takes up the entire UDP payload and is composed of a header and a
 its own payload. The packet header is structured as follows:
 
@@ -384,9 +384,8 @@ up to 1408 Bytes can be used for the payload.
 
 The payload consists of zero, one, or multiple frames, that build a second
 level of packetization in the protocol. The come in different flavors allowing
-for flexible state exchange and are discussed in [Frames](#frames).
-They also provide the means for multistreaming which is presented in
-[Streams](#streams).
+for flexible state exchange, and also provide the means for multistreaming,
+both discussed in detail in the following section.
 
 # Communication Structure {#communication-structure}
 
@@ -397,7 +396,7 @@ For the transfer of a single large file not much is needed, but synchronizing
 directories consisting of many small files calls for parallelization which
 can introduce new challenges like head-of-line blocking or state complexity.
 
-In general the ideal way to handle the transfers depend on the specific
+In general, the ideal way to handle the transfers depend on the specific
 nature of the application. Therefore RFT tries to provide a flexible
 framework for issuing file transfers, related actions and handling their
 responses. The application layer can then decide how to use these mechanisms
@@ -408,15 +407,41 @@ RFT achieves said flexibility by adopting two structural ideas from QUIC
 the following subsections.
 
 ## Frames {#frames}
-TODO
-- benefits
-- types
-- fixed vs variable size
+
+Frames subdivide packets into the atomic units of state exchange of the
+protocol. All frames have in common that they start with an 8 bit type ID.
+The ExitFrame for closing the connection is the only frame, that consists of
+nothing but the type ID 1:
+
+~~~~ language-REPLACE/DELETE
+ExitFrame (8) {
+  U8  TypeId = 1,
+}
+~~~~
+{: title="Exit frame wire format" }
+
+For frames with only header fields the length is implicitly given. Frames
+with variably sized path, message, or payload fields have a length field
+right in front of them. File data for example is carried in DataFrames:
+
+~~~~ language-REPLACE/DELETE
+DataFrame (72 + len(Payload)) {
+  U8     TypeId = 6,
+  U16    StreamId,
+  U48    Offset,
+  Bytes  Payload,
+}
+~~~~
+{: title="Data frame wire format" }
+
+The order of frames in a packet is only relevant within the same stream,
+the concept discussed in the following.
 
 ## Streams {#streams}
 
 TODO
 - frames
+- commands
 - stream id
 - stream 0
 - management
@@ -939,7 +964,7 @@ DataFrame (72 + len(Payload)) {
   Bytes  Payload,
 }
 ~~~~
-{: title="Error frame wire format" }
+{: title="Data frame wire format" }
 
 ~~~~ language-REPLACE/DELETE
 ReadFrame (160 + len(Path)) {
