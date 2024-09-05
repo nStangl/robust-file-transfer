@@ -388,6 +388,41 @@ for flexible state exchange and are discussed in [Frames](#frames).
 They also provide the means for multistreaming which is presented in
 [Streams](#streams).
 
+# Communication Structure {#communication-structure}
+
+TCPs rigid header structure has made it difficult to extend the protocol
+to more modern requirements. RFT as a file transfer protocol may be more
+specialized but still requires flexibility to fit different scenarios.
+For the transfer of a single large file not much is needed, but synchronizing
+directories consisting of many small files calls for parallelization which
+can introduce new challenges like head-of-line blocking or state complexity.
+
+In general the ideal way to handle the transfers depend on the specific
+nature of the application. Therefore RFT tries to provide a flexible
+framework for issuing file transfers, related actions and handling their
+responses. The application layer can then decide how to use these mechanisms
+and how much parallelization and complexity it requires.
+
+RFT achieves said flexibility by adopting two structural ideas from QUIC
+{{RFC9000}}, frames and streams. How these are used in RFT is discussed in
+the following subsections.
+
+## Frames {#frames}
+TODO
+- benefits
+- types
+- fixed vs variable size
+
+## Streams {#streams}
+
+TODO
+- frames
+- stream id
+- stream 0
+- management
+- creation
+- termination
+
 # Connection {#connection}
 
 The protocol is connection-based. Connections are identified a singular
@@ -658,23 +693,6 @@ matches the one in the header. If it does not the packet MUST be discarded
 as not even the connection or packet IDs that are required to issue a
 fast retransmission can be trusted. The receiver has to wait for a timeout
 to trigger retransmission on the sender side.
-
-# Frames {#frames}
-
-TODO
-- benefits
-- types
-- fixed vs variable size
-
-# Streams {#streams}
-
-TODO
-- frames
-- stream id
-- stream 0
-- management
-- creation
-- termination
 
 # File Transfer {#file-transfer}
 
