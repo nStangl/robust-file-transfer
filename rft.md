@@ -389,7 +389,7 @@ both discussed in detail in the following section.
 
 # Communication Structure {#communication-structure}
 
-TCPs rigid header structure has made it difficult to extend the protocol
+TCP's rigid header structure has made it difficult to extend the protocol
 to more modern requirements. RFT as a file transfer protocol may be more
 specialized but still requires flexibility to fit different scenarios.
 For the transfer of a single large file not much is needed, but synchronizing
