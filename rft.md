@@ -43,6 +43,33 @@ author:
   code: 85748
   country: DE # use TLD (except UK) or country name
   email: sandro.gierens@tum.de
+- role: editor # remove if not true
+  ins: D. Rentz
+  name: Désirée Rentz
+  org: Technical University of Munich
+  street: Boltzmannstraße 3
+  city: Garching
+  code: 85748
+  country: DE # use TLD (except UK) or country name
+  email: desiree.rentz@tum.de
+- role: editor # remove if not true
+  ins: Y. E. Nacar
+  name: Yusuf Erdem Nacar
+  org: Technical University of Munich
+  street: Boltzmannstraße 3
+  city: Garching
+  code: 85748
+  country: DE # use TLD (except UK) or country name
+  email: yusuferdem.nacar@tum.de
+- role: editor # remove if not true
+  ins: I. Gustafsson
+  name: Isak Gustafsson
+  org: Technical University of Munich
+  street: Boltzmannstraße 3
+  city: Garching
+  code: 85748
+  country: DE # use TLD (except UK) or country name
+  email: go68wuy@mytum.de
 
 normative:
   RFC0768: #UDP
