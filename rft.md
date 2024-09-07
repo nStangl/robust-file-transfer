@@ -476,8 +476,49 @@ Frames for connection global control traffic like AckFrames or FlowFrames
 do not carry a stream ID and are implicitly associated to the virtual stream 0.
 This stream ID MUST NOT be used for any other purpose.
 
-TODO
-- example
+The following sequence diagram shows the parallel execution of a read and stat
+command using two different streams (SID 1 and 2) on the same connection,
+ignoring acknowledgements:
+
+~~~~ LANGUAGE-REPLACE/DELETE
+Client                                                       Server
+   |                                                           |
+   |--------[CID:1, PID:5][READ, SID:1, PATH:hello.md]-------->|
+   |                                                           |
+   |<----------[CID:1, PID:4][DATA, SID:1, LEN:1000]-----------|
+   |<----------[CID:1, PID:5][DATA, SID:1, LEN:1000]-----------|
+   |                                                           |
+   |---------[CID:1, PID:6][STAT, SID:2, PATH:test.md]-------->|
+   |                                                           |
+   |<----[CID:1, PID:6][DATA, SID:1, LEN:100][EOF, SID:1]------|
+   |                   [ANSWER, SID:2, stat data...]           |
+   |                                                           |
+   v                                                           v
+~~~~
+{: title="Simplified sequence diagram of read and stat commands executed
+in parallel, ignoring acknowledgements. Note the different stream IDs." }
+
+Both streams are terminated in the same packet, one with the EOF (empty
+DataFrame) and the other with an AnswerFrame.
+
+In contrast the following example shows how the server returns an error
+in case of a duplicate stream ID:
+
+~~~~ LANGUAGE-REPLACE/DELETE
+Client                                                       Server
+   |                                                           |
+   |--------[CID:1, PID:5][READ, SID:1, PATH:hello.md]-------->|
+   |                                                           |
+   |<----------[CID:1, PID:4][DATA, SID:1, LEN:1000]-----------|
+   |<----------[CID:1, PID:5][DATA, SID:1, LEN:1000]-----------|
+   |                                                           |
+   |---------[CID:1, PID:6][STAT, SID:1, PATH:test.md]-------->|
+   |                                                           |
+   |<----[CID:1, PID:6][ERROR, SID:1, MSG:"Duplicate SID"]-----|
+   |                                                           |
+   v                                                           v
+~~~~
+{: title="Simplified sequence diagram of an error due to duplicate stream ID" }
 
 # Connection {#connection}
 
