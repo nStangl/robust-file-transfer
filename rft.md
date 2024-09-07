@@ -932,7 +932,37 @@ WriteFrames do not contain a checksum field that requires any special handling.
 
 ## Multiple Transfers {#multiple-transfers}
 
-TODO
+Multiple transfers can be executed in parallel by using different streams.
+The following sequence diagram shows how a client and server exchange two
+files:
+
+~~~~ LANGUAGE-REPLACE/DELETE
+Client                                                       Server
+|                                                                 |
+|----[CID:3, PID:4][READ, SID:5, OFF:0, LEN:0, PATH:readme.md]--->|
+|                                                                 |
+|<--------[CID:3, PID:7][DATA, SID:5, OFF:1000, LEN:1000]---------|
+|                       [ACK, PID:4]                              |
+|<--------[CID:3, PID:8][DATA, SID:5, OFF:2000, LEN:1000]---------|
+|                                                                 |
+|----[CID:3, PID:5][WRITE, SID:8, OFF:0, LEN:0, PATH:out.log]---->|
+|                  [DATA, SID:8, OFF:0, LEN:1000]                 |
+|---------[CID:3, PID:6][DATA, SID:5, OFF:1000, LEN:500]--------->|
+|                       [DATA, SID:5, OFF:1500, LEN:0]            |
+|                                                                 |
+|<--------[CID:3, PID:9][DATA, SID:5, OFF:3000, LEN:177]----------|
+|             [DATA, SID:5, OFF:3177, LEN:0][ACK, PID:6]          |
+|                                                                 |
+|-------------------[CID:3, PID:7][ACK, PID:9]------------------->|
+|                                                                 |
+v                                                                 v
+~~~~
+{: title="Sequence diagram for a parallel file read and write" }
+
+Initially, the server has a file called "readme.md" and the client has a file
+called "out.log". The client reads the file from the server and concurrently
+also writes the other file to the server, so that in the end both systems
+have both files.
 
 ## Recovery
 
