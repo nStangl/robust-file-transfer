@@ -598,6 +598,9 @@ Client                                                       Server
 ~~~~
 {: title="Example sequence diagram of cumulative acknowledgement" }
 
+Empty packets or those with only an AckFrame do NOT NEED to be acknowledged
+to prevent an acknowledgment loop.
+
 ## Retransmission {#retransmission}
 
 There are two ways retransmissions are triggered.
