@@ -966,6 +966,52 @@ have both files.
 
 ## Recovery
 
+As mentioned before, RFT does not have any explicit connection recovery
+mechanism. Offset and length fields on Read- and WriteFrames however allow
+the client to resume partially completed transfers in a new connection.
+
+The following examples show how such a resumption of both a read and write
+could be performed. In both cases we assume that the file transferred is
+called "example.txt" and 4000 bytes long.
+
+### Read Recovery
+
+In this case the client has already read the first 2000 bytes of the file
+before the connection is lost. For the second read command the client makes
+use of the offset and length fields to resume the transfer, and the optional
+checksum field to ensure the already read portion is still the same:
+
+~~~~ LANGUAGE-REPLACE/DELETE
+Client                                                       Server
+|                                                                 |
+|---[CID:0, PID:1][READ, SID:1, OFF:0, LEN:0, PATH:example.txt]-->|
+|                                                                 |
+|<---[CID:1, PID:1][ACK, PID:1][DATA, SID:1, OFF:0, LEN:1000]-----|
+|<--------[CID:3, PID:2][DATA, SID:5, OFF:1000, LEN:1000]---------|
+X client looses connection                                        |
+|    X----[CID:3, PID:3][DATA, SID:5, OFF:3000, LEN:1000]---------|
+|                                                         timeout X
+|                                                                 |
+|--[CID:0, PID:1]------------------------------------------------>|
+|  [READ, SID:1, OFF:2000, LEN:0, CRC: 0x1234, PATH:example.txt]  |
+|                                                                 |
+|<--[CID:3, PID:1][ACK, PID:1][DATA, SID:1, OFF:2000, LEN:1000]---|
+|<--------[CID:3, PID:2][DATA, SID:1, OFF:3000, LEN:1000]---------|
+|                       [DATA, SID:5, OFF:4000, LEN:0]            |
+|                                                                 |
+|-------------------[CID:3, PID:2][ACK, PID:2]------------------->|
+|                                                                 |
+v                                                                 v
+~~~~
+{: title="Sequence diagram for an example file read resumption
+after a client-side connection failure" }
+
+The server will validate the checksum upon receiving the ReadFrame and
+continue reading the file from the offset provided if it matches. Otherwise
+it will send an ErrorFrame with a message "Checksum mismatch".
+
+### Write Recovery
+
 TODO
 
 # Further Commands {#further-commands}
