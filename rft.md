@@ -855,7 +855,6 @@ Client                                                       Server
 |-------------------[CID:3, PID:5][ACK, PID:12]------------------>|
 |                                                                 |
 |<--------[CID:3, PID:13][DATA, SID:5, OFF:3000, LEN:1000]--------|
-|                        [ACK, PID:5]                             |
 |<--------[CID:3, PID:14][DATA, SID:5, OFF:4000, LEN:177]---------|
 |                        [DATA, SID:5, OFF:4178, LEN:0]           |
 |                                                                 |
@@ -918,7 +917,6 @@ Client                                                       Server
 |<------------------[CID:3, PID:5][ACK, PID:6]--------------------|
 |                                                                 |
 |---------[CID:3, PID:7][DATA, SID:5, OFF:3000, LEN:1000]-------->|
-|                       [ACK, PID:5]                              |
 |---------[CID:3, PID:8][DATA, SID:5, OFF:4000, LEN:177]--------->|
 |                       [DATA, SID:5, OFF:4178, LEN:0]            |
 |                                                                 |
