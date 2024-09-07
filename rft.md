@@ -4,7 +4,7 @@ ipr: trust200902
 cat: info # Check
 submissiontype: IETF
 area: Applications
-wg: TUM Protocol Design Group 2323
+wg: TUM Protocol Design Meta Group 23
 
 docname: draft-rfcxml-general-template-standard-00
 obsoletes: 4711, 4712 # Remove if not needed/Replace
@@ -16,6 +16,15 @@ lang: en
 kw: Internet-Draft
 # date: 2022-02-02 -- date is filled in automatically by xml2rfc if not given
 author:
+- role: editor # remove if not true
+  ins: S. A. Gierens
+  name: Sandro-Alessio Gierens
+  org: Technical University of Munich
+  street: Boltzmannstraße 3
+  city: Garching
+  code: 85748
+  country: DE # use TLD (except UK) or country name
+  email: sandro.gierens@tum.de
 - role: editor # remove if not true
   ins: N. Stangl
   name: Niklas Stangl
@@ -34,15 +43,6 @@ author:
   code: 85748
   country: DE # use TLD (except UK) or country name
   email: johannes.pfannschmidt@cs.tum.edu
-- role: editor # remove if not true
-  ins: S. A. Gierens
-  name: Sandro-Alessio Gierens
-  org: Technical University of Munich
-  street: Boltzmannstraße 3
-  city: Garching
-  code: 85748
-  country: DE # use TLD (except UK) or country name
-  email: sandro.gierens@tum.de
 - role: editor # remove if not true
   ins: D. Rentz
   name: Désirée Rentz
