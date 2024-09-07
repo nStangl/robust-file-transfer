@@ -439,14 +439,45 @@ the concept discussed in the following.
 
 ## Streams {#streams}
 
+Streams are logical channels within the connection encapsulating the frames
+belonging to a particular operation. This enables the parallel execution of
+multiple file transfers for example. Such frames carry a 16-bit stream ID
+(SID) to identify the stream they belong to. At any time there CANNOT be
+more than one stream with the same ID within the connection. Stream IDs MAY
+however be reused after completion of a previous stream with that ID.
+
+A stream is created by the client when sending a command frame
+to the server. The stream ID is not negotiated but chosen by the client
+and send to the server in the command frame, for example in the ReadFrame:
+
+~~~~ language-REPLACE/DELETE
+ReadFrame (160 + len(Path)) {
+  U8      TypeId = 7,
+  U16     StreamId,
+  U7      Reserved = 0,
+  Bool    ValidateChecksum,
+  U48     Offset,
+  U48     Length,
+  U32     Checksum,
+  String  Path,
+}
+~~~~
+{: title="Read frame wire format" }
+
+The client is therefore solely responsible for ensuring the time-local
+uniqueness of the stream ID. The server MUST answer commands with the same
+stream ID and in the context of the same stream.
+
+Streams are closed when either the requested operation is completed,
+via an AnswerFrame or an empty DataFrame which signals EOF for transfers,
+or with an ErrorFrame in conflict cases.
+
+Frames for connection global control traffic like AckFrames or FlowFrames
+do not carry a stream ID and are implicitly associated to the virtual stream 0.
+This stream ID MUST NOT be used for any other purpose.
+
 TODO
-- frames
-- commands
-- stream id
-- stream 0
-- management
-- creation
-- termination
+- example
 
 # Connection {#connection}
 
