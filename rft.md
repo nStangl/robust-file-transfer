@@ -35,7 +35,7 @@ author:
   country: DE # use TLD (except UK) or country name
   email: johannes.pfannschmidt@cs.tum.edu
 - role: editor # remove if not true
-  ins: S. Gierens
+  ins: S. A. Gierens
   name: Sandro-Alessio Gierens
   org: Technical University of Munich
   street: Boltzmannstraße 3
