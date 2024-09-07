@@ -1022,6 +1022,30 @@ TODO
 
 little endian for numbers
 
+~~~~ language-REPLACE/DELETE
+Path (2 + Length) {
+  U16           Length,
+  Char[Length]  Buffer,
+}
+~~~~
+{: title="Path wire format" }
+
+~~~~ language-REPLACE/DELETE
+String (2 + Length) {
+  U16           Length,
+  Char[Length]  Buffer,
+}
+~~~~
+{: title="String wire format" }
+
+~~~~ language-REPLACE/DELETE
+Bytes (2 + Length) {
+  U16         Length,
+  U8[Length]  Buffer,
+}
+~~~~
+{: title="Bytes wire format" }
+
 | Frame Type Value | Frame Type                 |
 |  0               | Acknowledgement Frame      |
 |  1               | Exit Frame                 |
@@ -1166,27 +1190,3 @@ ListFrame (24 + len(Path)) {
 }
 ~~~~
 {: title="List frame wire format" }
-
-~~~~ language-REPLACE/DELETE
-Path (2 + Length) {
-  U16           Length,
-  Char[Length]  Buffer,
-}
-~~~~
-{: title="Path wire format" }
-
-~~~~ language-REPLACE/DELETE
-String (2 + Length) {
-  U16           Length,
-  Char[Length]  Buffer,
-}
-~~~~
-{: title="String wire format" }
-
-~~~~ language-REPLACE/DELETE
-Bytes (2 + Length) {
-  U16         Length,
-  U8[Length]  Buffer,
-}
-~~~~
-{: title="Bytes wire format" }
