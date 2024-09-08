@@ -15,6 +15,7 @@ CRC32
 CWND
 CWND_NEW
 Checksum
+ChecksumFrame
 Checksumming
 ConnectionIdChangeFrame
 DACK
