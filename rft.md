@@ -987,7 +987,7 @@ Client                                                       Server
 |<---[CID:1, PID:1][ACK, PID:1][DATA, SID:1, OFF:0, LEN:1000]-----|
 |<--------[CID:3, PID:2][DATA, SID:5, OFF:1000, LEN:1000]---------|
 X client looses connection                                        |
-|    X----[CID:3, PID:3][DATA, SID:5, OFF:3000, LEN:1000]---------|
+     X----[CID:3, PID:3][DATA, SID:5, OFF:2000, LEN:1000]---------|
 |                                                         timeout X
 |                                                                 |
 |--[CID:0, PID:1]------------------------------------------------>|
@@ -1010,7 +1010,42 @@ it will send an ErrorFrame with a message "Checksum mismatch".
 
 ### Write Recovery
 
-TODO
+In this case the server is assumed to have already received and acknowledged
+the first 3000 bytes of the file before the connection was lost. The client
+then simply uses the offset field to resume the transfer from there:
+
+~~~~ LANGUAGE-REPLACE/DELETE
+Client                                                       Server
+|                                                                 |
+|--[CID:0, PID:1][WRITE, SID:1, OFF:0, LEN:0, PATH:example.txt]-->|
+|                [DATA, SID:1, OFF:0, LEN:1000]                   |
+|                                                                 |
+|<------------------[CID:1, PID:1][ACK, PID:1]--------------------|
+|                                                                 |
+|---------[CID:1, PID:2][DATA, SID:1, OFF:1000, LEN:1000]-------->|
+|---------[CID:1, PID:3][DATA, SID:1, OFF:2000, LEN:1000]-------->|
+|                                                                 |
+|<------------------[CID:1, PID:2][ACK, PID:3]--------------------|
+|                                                                 |
+|---------[CID:1, PID:4][DATA, SID:1, OFF:4000, LEN:1000]-------->|
+X client looses connection                                        |
+    X---------------[CID:1, PID:1][ACK, PID:4]--------------------|
+|                                                         timeout X
+|                                                                 |
+|----------[CID:0, PID:1]---------------------------------------->|
+|          [WRITE, SID:1, OFF:3000, LEN:0, PATH:example.txt]      |
+|          [DATA, SID:1, OFF:3000, LEN:1000]                      |
+|                                                                 |
+|<------------------[CID:1, PID:1][ACK, PID:1]--------------------|
+|                                                                 |
+v                                                                 v
+~~~~
+{: title="Sequence diagram for an example file write resumption
+after a client-side connection failure" }
+
+Note that in contrast to the read case the protocol currently offers no
+mechanism on the WriteFrame to ensure the file has not changed on the server
+side nor would a ChecksumFrame completely eliminate this possibility.
 
 # Further Commands {#further-commands}
 
