@@ -1049,6 +1049,68 @@ side nor would a ChecksumFrame completely eliminate this possibility.
 
 # Further Commands {#further-commands}
 
+While RFT is primarily designed for file transfers, many use cases require
+additional operations, therefore RFT has three additional commands: Checksum,
+Stat, and List, all discussed in the following.
+
+## Checksum {#checksum}
+
+The ChecksumFrame initiates the computation of the CRC32 checksum of a file
+on the server side:
+
+~~~~ language-REPLACE/DELETE
+ChecksumFrame (24 + len(Path)) {
+  U8      TypeId = 9,
+  U16     StreamId,
+  String  Path,
+}
+~~~~
+{: title="Checksum frame wire format" }
+
+The server responds with an AnswerFrame containing the CRC32 checksum of the
+
+~~~~ language-REPLACE/DELETE
+AnswerFrame (24 + len(Payload)) {
+  U8     TypeId = 4,
+  U16    StreamId,
+  Bytes  Payload = {
+    U32 Checksum,
+  }
+}
+~~~~
+{: title="Answer frame for checksum command wire format" }
+
+The following sequence diagram shows the process of a checksum computation:
+
+~~~~ LANGUAGE-REPLACE/DELETE
+Client                                                       Server
+|                                                                 |
+|----------[CID:1, PID:1][CHK, SID:1, PATH:big-file.img]--------->|
+|                                                                 |
+|<------------------[CID:1, PID:1][ACK, PID:1]--------------------|
+|                                                                 |
+.                                                                 .
+.      other or keep-alive traffic while server is computing      .
+.                                                                 .
+|                                                                 |
+|<-----------[CID:1, PID:2+X][ANSW, SID:1, CRC:0x1234]------------|
+|                                                                 |
+|-----------------[CID:1, PID:2+Y][ACK, PID:2+X]----------------->|
+|                                                                 |
+v                                                                 v
+~~~~
+{: title="Sequence diagram for an example checksum computation" }
+
+Note that in case of a larger file the server MAY send empty packets to
+keep the connection alive in absence of other traffic while the checksum
+is computed.
+
+## Stat {#stat}
+
+TODO
+
+## List {#list}
+
 TODO
 
 # Wire Format {#wire-format}
