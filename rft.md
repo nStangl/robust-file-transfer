@@ -6,9 +6,9 @@ submissiontype: IETF
 area: Applications
 wg: TUM Protocol Design Meta Group 23
 
-docname: draft-rfcxml-general-template-standard-00
-obsoletes: 4711, 4712 # Remove if not needed/Replace
-updates: 4710 # Remove if not needed/Replace
+docname: draft-group23-rft-00
+# obsoletes: 4711, 4712 # Remove if not needed/Replace
+# updates: 4710 # Remove if not needed/Replace
 
 title: Robust File Transfer
 abbrev: RFT
