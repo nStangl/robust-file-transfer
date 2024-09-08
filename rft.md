@@ -1053,17 +1053,35 @@ TODO
 
 # Wire Format {#wire-format}
 
-TODO
+This section summarizes the wire format of the protocol.
 
-little endian for numbers
+## Numbers {#numbers}
+
+RFT encodes numbers in little endian format to make implementation easier on
+most platforms.
+
+## Arrays {#arrays}
+
+Array types have a variable size and are prefixed with a 2-byte length field,
+sufficient for all practical purposes of RFT which is designed to avoid
+IP fragmentation.
+
+### Bytes {#bytes}
+
+The Bytes type is used for arbitrary binary data like file chunks:
 
 ~~~~ language-REPLACE/DELETE
-Path (2 + Length) {
-  U16           Length,
-  Char[Length]  Buffer,
+Bytes (2 + Length) {
+  U16         Length,
+  U8[Length]  Buffer,
 }
 ~~~~
-{: title="Path wire format" }
+{: title="Bytes wire format" }
+
+### String {#string}
+
+The String type is a sequence of UTF-8 encoded characters, used for message
+fields:
 
 ~~~~ language-REPLACE/DELETE
 String (2 + Length) {
@@ -1073,13 +1091,48 @@ String (2 + Length) {
 ~~~~
 {: title="String wire format" }
 
+### Path {#path}
+
+The Path type is technically equivalent to the String type, but is
+specifically intended for file paths:
+
 ~~~~ language-REPLACE/DELETE
-Bytes (2 + Length) {
-  U16         Length,
-  U8[Length]  Buffer,
+Path (2 + Length) {
+  U16           Length,
+  Char[Length]  Buffer,
 }
 ~~~~
-{: title="Bytes wire format" }
+{: title="Path wire format" }
+
+## Packet Format {#packet format}
+
+The packet is the top-level structure of the protocol and consists of a
+header and an array of frames:
+
+~~~~ language-REPLACE/DELETE
+Packet (len(Header) + len(Frames)) {
+  PacketHeader  Header,
+  Array[Frame]  Frames,
+}
+~~~~
+{: title="Packet wire format" }
+
+The header contains the version, connection ID, packet ID, and a partial
+CRC32 checksum:
+
+~~~~ language-REPLACE/DELETE
+PacketHeader (96) {
+  U8   Version = 1,
+  U32  ConnectionId,
+  U32  PacketId,
+  U24  PacketChecksum,
+}
+~~~~
+{: title="Packet header wire format" }
+
+## Frame Format {#frame-format}
+
+Frames come in different types identified by a type ID:
 
 | Frame Type Value | Frame Type                 |
 |  0               | Acknowledgement Frame      |
@@ -1096,23 +1149,9 @@ Bytes (2 + Length) {
 | 11               | List Frame                 |
 {: title="Frame type definitions."}
 
-~~~~ language-REPLACE/DELETE
-PacketHeader (96) {
-  U8   Version = 1,
-  U32  ConnectionId,
-  U32  PacketId,
-  U24  PacketChecksum,
-}
-~~~~
-{: title="Packet header wire format" }
+### Ack Frame {#ack-frame}
 
-~~~~ language-REPLACE/DELETE
-Packet (len(Header) + len(Frames)) {
-  PacketHeader  Header,
-  Array[Frame]  Frames,
-}
-~~~~
-{: title="Packet wire format" }
+The AckFrame contains the packet ID to be acknowledged cumulatively:
 
 ~~~~ language-REPLACE/DELETE
 AckFrame (40) {
@@ -1122,12 +1161,21 @@ AckFrame (40) {
 ~~~~
 {: title="Acknowledgement frame wire format" }
 
+### Exit Frame {#exit-frame}
+
+The ExitFrame terminates the connection and has no further fields:
+
 ~~~~ language-REPLACE/DELETE
 ExitFrame (8) {
   U8  TypeId = 1,
 }
 ~~~~
 {: title="Exit frame wire format" }
+
+### Connection ID Change Frame {#connection-id-change-frame}
+
+The ConnectionIdChangeFrame contains the old and new connection ID
+for negotiation:
 
 ~~~~ language-REPLACE/DELETE
 ConnIdChange (72) {
@@ -1138,6 +1186,10 @@ ConnIdChange (72) {
 ~~~~
 {: title="Connection ID Change frame wire format" }
 
+### Flow Control Frame {#flow-control-frame}
+
+The FlowControl frame contains the new flow window size:
+
 ~~~~ language-REPLACE/DELETE
 FlowControl (40) {
   U8   TypeId = 3,
@@ -1145,6 +1197,12 @@ FlowControl (40) {
 }
 ~~~~
 {: title="Flow control frame wire format" }
+
+### Answer Frame {#answer-frame}
+
+The AnswerFrame responds to the command on the same stream with Bytes
+payload of command-specific structure, which is described in more detail
+[above](#further-commands).
 
 ~~~~ language-REPLACE/DELETE
 AnswerFrame (24 + len(Payload)) {
@@ -1155,6 +1213,10 @@ AnswerFrame (24 + len(Payload)) {
 ~~~~
 {: title="Answer frame wire format" }
 
+### Error Frame {#error-frame}
+
+The ErrorFrame returns an error message on the same stream:
+
 ~~~~ language-REPLACE/DELETE
 ErrorFrame (24 + len(Message)) {
   U8      TypeId = 5,
@@ -1163,6 +1225,10 @@ ErrorFrame (24 + len(Message)) {
 }
 ~~~~
 {: title="Error frame wire format" }
+
+### Data Frame {#data-frame}
+
+The DataFrame carries a chunk of the transferred file at the given offset:
 
 ~~~~ language-REPLACE/DELETE
 DataFrame (72 + len(Payload)) {
@@ -1173,6 +1239,11 @@ DataFrame (72 + len(Payload)) {
 }
 ~~~~
 {: title="Data frame wire format" }
+
+### Read Frame {#read-frame}
+
+The ReadFrame initiates a file read operation and is described in detail
+[above](#read).
 
 ~~~~ language-REPLACE/DELETE
 ReadFrame (160 + len(Path)) {
@@ -1188,6 +1259,11 @@ ReadFrame (160 + len(Path)) {
 ~~~~
 {: title="Read frame wire format" }
 
+### Write Frame {#write-frame}
+
+The WriteFrame initiates a file write operation and is described in detail
+[above](#write).
+
 ~~~~ language-REPLACE/DELETE
 WriteFrame (120 + len(Path)) {
   U8      TypeId = 8,
@@ -1199,6 +1275,11 @@ WriteFrame (120 + len(Path)) {
 ~~~~
 {: title="Write frame wire format" }
 
+### Checksum Frame {#checksum-frame}
+
+The ChecksumFrame initiates a checksum computation for the given file,
+and is described in detail [above](#further-commands).
+
 ~~~~ language-REPLACE/DELETE
 ChecksumFrame (24 + len(Path)) {
   U8      TypeId = 9,
@@ -1208,6 +1289,11 @@ ChecksumFrame (24 + len(Path)) {
 ~~~~
 {: title="Checksum frame wire format" }
 
+### Stat Frame {#stat-frame}
+
+The StatFrame initiates a stat operation for the given file,
+and is described in detail [above](#further-commands).
+
 ~~~~ language-REPLACE/DELETE
 StatFrame (24 + len(Path)) {
   U8      TypeId = 10,
@@ -1216,6 +1302,11 @@ StatFrame (24 + len(Path)) {
 }
 ~~~~
 {: title="Stat frame wire format" }
+
+### List Frame {#list-frame}
+
+The ListFrame initiates a list operation for the given directory,
+and is described in detail [above](#further-commands).
 
 ~~~~ language-REPLACE/DELETE
 ListFrame (24 + len(Path)) {
