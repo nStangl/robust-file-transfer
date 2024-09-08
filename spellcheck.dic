@@ -1,6 +1,7 @@
 1
 =
 AIMD
+Ack
 AckFrame
 AckFrames
 Acknowledgement
@@ -38,6 +39,7 @@ IETF
 IP
 Isak
 Johannes
+ListFrame
 MTU
 Nacar
 Niklas
@@ -60,6 +62,7 @@ SDU
 SID
 Sandro
 Stangl
+StatFrame
 TByte
 TCP
 TCP's
