@@ -1109,7 +1109,7 @@ is computed.
 
 ## Stat {#stat}
 
-TODO
+The StatFrame issues a request for file metadata:
 
 ~~~~ language-REPLACE/DELETE
 StatFrame (24 + len(Path)) {
@@ -1119,6 +1119,8 @@ StatFrame (24 + len(Path)) {
 }
 ~~~~
 {: title="Stat frame wire format" }
+
+The server responds with an AnswerFrame holding said metadata:
 
 ~~~~ language-REPLACE/DELETE
 AnswerFrame (24 + len(Payload)) {
@@ -1136,6 +1138,8 @@ AnswerFrame (24 + len(Payload)) {
 ~~~~
 {: title="Answer frame for checksum command wire format" }
 
+The file type is encoded in the first byte as follows:
+
 | File Type Value | File Type                  |
 |  0              |        - reserved -        |
 |  1              | Regular file               |
@@ -1147,6 +1151,8 @@ AnswerFrame (24 + len(Payload)) {
 |  7              | Socket                     |
 |  8 to 256       |        - reserved -        |
 {: title="File type definitions."}
+
+The file permissions follow Linux conventions:
 
 | Permission Bit  | Permission        |
 |  1              | Set User ID       |
@@ -1163,7 +1169,21 @@ AnswerFrame (24 + len(Payload)) {
 | 12              | Other Execute     |
 {: title="Permission bit definitions."}
 
+The file size is the number of bytes in the file, while the timestamps are
+64-bit UNIX timestamps.
 
+The following sequence diagram shows the process of a stat operation:
+
+~~~~ LANGUAGE-REPLACE/DELETE
+Client                                                       Server
+|                                                                 |
+|---------[CID:1, PID:1][STAT, SID:1, PATH:some-file.txt]-------->|
+|                                                                 |
+|<-------[CID:1, PID:1][ACK, PID:1][ANSW, SID:1, METADATA]--------|
+|                                                                 |
+v                                                                 v
+~~~~
+{: title="Sequence diagram for an example checksum computation" }
 
 ## List {#list}
 
