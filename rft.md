@@ -1067,14 +1067,15 @@ ChecksumFrame (24 + len(Path)) {
 ~~~~
 {: title="Checksum frame wire format" }
 
-The server responds with an AnswerFrame containing the CRC32 checksum of the
+The server responds with an AnswerFrame containing the SHA256 checksum of the
+entire file:
 
 ~~~~ language-REPLACE/DELETE
 AnswerFrame (24 + len(Payload)) {
   U8     TypeId = 4,
   U16    StreamId,
   Bytes  Payload = {
-    U32 Checksum,
+    U8[32] Checksum,
   }
 }
 ~~~~
@@ -1093,7 +1094,7 @@ Client                                                       Server
 .      other or keep-alive traffic while server is computing      .
 .                                                                 .
 |                                                                 |
-|<-----------[CID:1, PID:2+X][ANSW, SID:1, CRC:0x1234]------------|
+|<-----------[CID:1, PID:2+X][ANSW, SID:1, SHA:0x1234]------------|
 |                                                                 |
 |-----------------[CID:1, PID:2+Y][ACK, PID:2+X]----------------->|
 |                                                                 |
