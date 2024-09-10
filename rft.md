@@ -1149,8 +1149,8 @@ AnswerFrame (24 + len(Payload)) {
 {: title="File type definitions."}
 
 | Permission Bit  | Permission        |
-|  1              | Set UID           |
-|  2              | Set GID           |
+|  1              | Set User ID       |
+|  2              | Set Group ID      |
 |  3              | Sticky Bit        |
 |  4              | Owner Read        |
 |  5              | Owner Write       |
