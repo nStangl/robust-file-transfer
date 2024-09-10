@@ -77,6 +77,7 @@ normative:
   RFC9000: #QUIC
   RFC3629: #UTF-8 strings
   RFC3385: #CRC32
+  RFC6234: #SHA-256
 
 
 --- abstract
@@ -1055,8 +1056,8 @@ Stat, and List, all discussed in the following.
 
 ## Checksum {#checksum}
 
-The ChecksumFrame initiates the computation of the CRC32 checksum of a file
-on the server side:
+The ChecksumFrame initiates the computation of the SHA-256 {{RFC6234}}
+checksum of a file on the server side:
 
 ~~~~ language-REPLACE/DELETE
 ChecksumFrame (24 + len(Path)) {
@@ -1067,7 +1068,7 @@ ChecksumFrame (24 + len(Path)) {
 ~~~~
 {: title="Checksum frame wire format" }
 
-The server responds with an AnswerFrame containing the SHA256 checksum of the
+The server responds with an AnswerFrame containing the SHA-256 checksum of the
 entire file:
 
 ~~~~ language-REPLACE/DELETE
