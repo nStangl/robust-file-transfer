@@ -1169,6 +1169,37 @@ AnswerFrame (24 + len(Payload)) {
 
 TODO
 
+~~~~ language-REPLACE/DELETE
+ListFrame (24 + len(Path)) {
+  U8      TypeId = 11,
+  U16     StreamId,
+  String  Path,
+}
+~~~~
+{: title="List frame wire format" }
+
+~~~~ language-REPLACE/DELETE
+DataFrame (72 + len(Payload)) {
+  U8     TypeId = 6,
+  U16    StreamId,
+  U48    Offset,
+  Bytes  Payload = {
+    DirectoryEntry[n] Entries,
+  }
+}
+~~~~
+{: title="Wire format of data frame for list command response"}
+
+~~~~ language-REPLACE/DELETE
+DirectoryEntry (72 + len(Payload)) {
+  U8      FileType,
+  Char[m] Name,
+  Char    Separator = '\n',
+}
+~~~~
+{: title="Directory entry wire format" }
+
+
 # Wire Format {#wire-format}
 
 This section summarizes the wire format of the protocol.
