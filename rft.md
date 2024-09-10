@@ -1181,13 +1181,15 @@ Client                                                       Server
 |                                                                 |
 |<-------[CID:1, PID:1][ACK, PID:1][ANSW, SID:1, METADATA]--------|
 |                                                                 |
+|-------------------[CID:1, PID:2][ACK, PID:1]------------------->|
+|                                                                 |
 v                                                                 v
 ~~~~
 {: title="Sequence diagram for an example checksum computation" }
 
 ## List {#list}
 
-TODO
+The ListFrame requests the list of entries in a directory:
 
 ~~~~ language-REPLACE/DELETE
 ListFrame (24 + len(Path)) {
@@ -1197,6 +1199,9 @@ ListFrame (24 + len(Path)) {
 }
 ~~~~
 {: title="List frame wire format" }
+
+Similar to the ReadFrame the server responds with sequence of DataFrames
+each containing DirectoryEntries:
 
 ~~~~ language-REPLACE/DELETE
 DataFrame (72 + len(Payload)) {
@@ -1210,6 +1215,9 @@ DataFrame (72 + len(Payload)) {
 ~~~~
 {: title="Wire format of data frame for list command response"}
 
+Each line of the payload contains the file type in the first byte, followed
+by the file name up to the line terminator:
+
 ~~~~ language-REPLACE/DELETE
 DirectoryEntry (72 + len(Payload)) {
   U8      FileType,
@@ -1219,6 +1227,22 @@ DirectoryEntry (72 + len(Payload)) {
 ~~~~
 {: title="Directory entry wire format" }
 
+The following sequence diagram shows the process of a list operation:
+
+~~~~ LANGUAGE-REPLACE/DELETE
+Client                                                       Server
+|                                                                 |
+|---------[CID:1, PID:5][LIST, SID:1, PATH:/home/admin/]--------->|
+|                                                                 |
+|<---[CID:3, PID:10][ACK, PID:4][DATA, SID:5, OFF:0, LEN:1000]----|
+|<--------[CID:3, PID:11][DATA, SID:5, OFF:1000, LEN:1000]--------|
+|<--------[CID:3, PID:12][DATA, SID:5, OFF:2000, LEN:1000]--------|
+|                                                                 |
+|-------------------[CID:3, PID:6][ACK, PID:12]------------------>|
+|                                                                 |
+v                                                                 v
+~~~~
+{: title="Sequence diagram for an example checksum computation" }
 
 # Wire Format {#wire-format}
 
