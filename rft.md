@@ -1292,7 +1292,7 @@ ErrorFrame (24 + len(Message)) {
 
 ### Data Frame {#data-frame}
 
-The DataFrame carries a chunk of the transferred file at the given offset:
+The DataFrame carries a chunk of the transferred file at the given offset.
 
 ~~~~ language-REPLACE/DELETE
 DataFrame (72 + len(Payload)) {
@@ -1303,6 +1303,9 @@ DataFrame (72 + len(Payload)) {
 }
 ~~~~
 {: title="Data frame wire format" }
+
+Note that they are also used to transmit the response to a list command,
+see [above](#list).
 
 ### Read Frame {#read-frame}
 
