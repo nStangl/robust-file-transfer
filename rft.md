@@ -1111,6 +1111,60 @@ is computed.
 
 TODO
 
+~~~~ language-REPLACE/DELETE
+StatFrame (24 + len(Path)) {
+  U8      TypeId = 10,
+  U16     StreamId,
+  String  Path,
+}
+~~~~
+{: title="Stat frame wire format" }
+
+~~~~ language-REPLACE/DELETE
+AnswerFrame (24 + len(Payload)) {
+  U8     TypeId = 4,
+  U16    StreamId,
+  Bytes  Payload = {
+    U4     FileType,
+    U12    Permissions,
+    U64    FileSize,
+    U64    CreatedAt,
+    U64    ModifiedAt,
+    U64    AccessedAt,
+  }
+}
+~~~~
+{: title="Answer frame for checksum command wire format" }
+
+| File Type Value | File Type                  |
+|  0              |        - reserved -        |
+|  1              | Regular file               |
+|  2              | Directory                  |
+|  3              | Symbolic link              |
+|  4              | Block device               |
+|  5              | Character device           |
+|  6              | FIFO                       |
+|  7              | Socket                     |
+|  8 to 256       |        - reserved -        |
+{: title="File type definitions."}
+
+| Permission Bit  | Permission        |
+|  1              | Set UID           |
+|  2              | Set GID           |
+|  3              | Sticky Bit        |
+|  4              | Owner Read        |
+|  5              | Owner Write       |
+|  6              | Owner Execute     |
+|  7              | Group Read        |
+|  8              | Group Write       |
+|  9              | Group Execute     |
+| 10              | Other Read        |
+| 11              | Other Write       |
+| 12              | Other Execute     |
+{: title="Permission bit definitions."}
+
+
+
 ## List {#list}
 
 TODO
