@@ -32,7 +32,7 @@ jobs:
           mkdir -p artifact && \
           mv index.html rft.txt rft.html rft.pdf artifact
       - name: Upload artifacts
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           name: rft
           path: artifact
